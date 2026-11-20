@@ -12,7 +12,11 @@ on:
       - 'tv/**'
       - 'server/**'
       - 'shared/**'
-concurrency:\n  group: salahaldin-checks-\${{ github.ref }}\n  cancel-in-progress: true\npermissions:\n  contents: read
+concurrency:
+  group: salahaldin-checks-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
 jobs:
   tv:
     runs-on: ubuntu-latest
