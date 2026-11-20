@@ -7,6 +7,9 @@ on:
       - 'server/composer.lock'
       - 'server/app/**'
       - 'server/routes/**'
+      - 'server/tests/**'
+      - 'server/lang/**'
+      - 'server/phpunit.xml'
       - '.github/workflows/laravel13-migration.yml'
   workflow_dispatch:
 permissions:
