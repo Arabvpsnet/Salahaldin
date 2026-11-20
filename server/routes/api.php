@@ -1,0 +1,134 @@
+<?php
+
+use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Quran\AI\AIChatController;
+use App\Http\Controllers\Quran\API\Category\CategoryController;
+use App\Http\Controllers\Quran\API\Chapter\ChapterController;
+use App\Http\Controllers\Quran\API\Dhikr\DhikrController;
+use App\Http\Controllers\Quran\API\Donation\DonationController;
+use App\Http\Controllers\Quran\API\Donation\PaypalDonationController;
+use App\Http\Controllers\Quran\API\Donation\PaystackDonationController;
+use App\Http\Controllers\Quran\API\Donation\RazorpayDonationController;
+use App\Http\Controllers\Quran\API\Donation\SslCommerzDonationController;
+use App\Http\Controllers\Quran\API\Donation\StripeDonationController;
+use App\Http\Controllers\Quran\API\Dua\DuaController;
+use App\Http\Controllers\Quran\API\HaramCode\HaramCodeController;
+use App\Http\Controllers\Quran\API\HomeLayout\HomeLayoutController;
+use App\Http\Controllers\Quran\API\Juze\JuzesController;
+use App\Http\Controllers\Quran\API\Mosque\NearbyMosqueController;
+use App\Http\Controllers\Quran\API\PaymentMethod\PaymentMethodController;
+use App\Http\Controllers\Quran\API\PrayerTime\PrayerTimeController;
+use App\Http\Controllers\Quran\API\Reciter\ReciterController;
+use App\Http\Controllers\Quran\API\Settings\SettingsController;
+use App\Http\Controllers\Quran\API\SifatName\SifatNameController;
+use App\Http\Controllers\Quran\API\Theme\ThemeController;
+use App\Http\Controllers\Quran\API\Translator\TranslatorController;
+use App\Http\Controllers\Quran\API\Verse\VerseController;
+use App\Http\Controllers\Quran\API\WallPaper\WallpaperController;
+use App\Http\Controllers\Quran\WallPaper\WallpaperCategoryController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    abort_if($request->user() instanceof \App\Models\Mobile\MobileAccount, 403);
+    return $request->user();
+});
+
+Route::get('dashboard', [DashboardController::class, 'getDashboardInformation']);
+Route::get('get-region-info', [DashboardController::class, 'getOsInfo']);
+Route::get('get-country-info', [DashboardController::class, 'getCountryInfo']);
+
+// Static public content is cached inside Laravel (file store today, Memcached
+// compatible later). Route parameters and canonicalized query strings are part
+// of the key; successful admin mutations rotate the namespace version.
+Route::middleware('public.api.cache:content,86400')->group(function () {
+    Route::get('chapters', [ChapterController::class, 'index']);
+    Route::get('verses/{chapter}', [VerseController::class, 'index']);
+    Route::get('juzes', [JuzesController::class, 'index']);
+    Route::get('translators', [TranslatorController::class, 'index']);
+    Route::get('dua-list', [DuaController::class, 'index']);
+    Route::get('dua-details/{id}', [DuaController::class, 'show']);
+    Route::get('dhikr-list', [DhikrController::class, 'dhikrList']);
+    Route::get('dhikr-details/{id}', [DhikrController::class, 'show']);
+    Route::get('sifat-name-list', [SifatNameController::class, 'dhikrList']);
+    Route::get('sifat-name-details/{id}', [SifatNameController::class, 'show']);
+    Route::get('haram-code-list', [HaramCodeController::class, 'haramCodeList']);
+    Route::get('get-cities', [PrayerTimeController::class, 'getCities']);
+    Route::get('reciters', [ReciterController::class, 'index']);
+    Route::get('reciter-sura/{reciter}', [ReciterController::class, 'reciterSuraList']);
+    Route::get('wallpapers', [WallpaperController::class, 'index']);
+    Route::get('wallpaper-category', [WallpaperCategoryController::class, 'wallpaperCategory']);
+});
+Route::any('today-prayer-time', [PrayerTimeController::class, 'getPrayerTime']);
+Route::post('prayer-time-calendar', [PrayerTimeController::class, 'getPrayerCalendar']);
+Route::get('prayer-by-location', [PrayerTimeController::class, 'prayerByLocation']);
+// OpenStreetMap mosques behind a tile cache; see NearbyMosqueService.
+Route::get('mosques/nearby', [NearbyMosqueController::class, 'index']);
+Route::get('settings', [SettingsController::class, 'index']);
+Route::middleware('public.api.cache:settings,600')->group(function () {
+    Route::get('theme', [ThemeController::class, 'index']);
+    Route::get('home-layout', [HomeLayoutController::class, 'index']);
+});
+Route::get('donation-categories', [CategoryController::class, 'index']);
+Route::post('donation-store', [DonationController::class, 'store']);
+Route::get('donation-list', [DonationController::class, 'index']);
+// Stripe
+Route::post('donation/stripe/checkout', [StripeDonationController::class, 'createCheckout']);
+Route::post('donation/stripe/verify', [StripeDonationController::class, 'verifySession']);
+// PayPal
+Route::get('donation/paypal/client-id', [PaypalDonationController::class, 'clientId']);
+Route::post('donation/paypal/create-order', [PaypalDonationController::class, 'createOrder']);
+Route::post('donation/paypal/capture-order', [PaypalDonationController::class, 'captureOrder']);
+// Razorpay
+Route::post('donation/razorpay/create-order', [RazorpayDonationController::class, 'createOrder']);
+Route::post('donation/razorpay/verify', [RazorpayDonationController::class, 'verifyPayment']);
+// Paystack
+Route::get('donation/paystack/public-key', [PaystackDonationController::class, 'publicKey']);
+Route::post('donation/paystack/initialize', [PaystackDonationController::class, 'initialize']);
+Route::post('donation/paystack/verify', [PaystackDonationController::class, 'verify']);
+// SSLCommerz
+Route::post('donation/sslcommerz/initiate', [SslCommerzDonationController::class, 'initiate']);
+Route::post('donation/sslcommerz/success', [SslCommerzDonationController::class, 'success']);
+Route::post('donation/sslcommerz/fail', [SslCommerzDonationController::class, 'fail']);
+Route::post('donation/sslcommerz/cancel', [SslCommerzDonationController::class, 'cancel']);
+Route::post('donation/sslcommerz/ipn', [SslCommerzDonationController::class, 'ipn']);
+Route::get('payment-methods', [PaymentMethodController::class, 'customerPaymentMethod']);
+Route::post('ai/chat', [AIChatController::class, 'chat']);
+Route::post('ai/generate-names', [AIChatController::class, 'generateNames']);
+
+// Mobile accounts are isolated from administrator users and sessions.
+require __DIR__.'/mobile.php';
+
+// Salahaldin: public read-only mosque schedule in an IANA time zone.
+// Only vetted JSON files created by the administrator should be placed in storage/app/prayer/schedules.
+Route::get('salahaldin/v1/schedules/{mosque}', function (string $mosque) {
+    $path = storage_path('app/prayer/schedules/'.$mosque.'.json');
+    abort_unless(is_file($path), 404);
+    return response()->file($path, [
+        'Content-Type' => 'application/json; charset=utf-8',
+        'Cache-Control' => 'public, max-age=30',
+    ]);
+})->where('mosque', '[a-z0-9-]+');
+
+
+// Salahaldin: versioned, attributed catalog of QuranEnc edition metadata.
+// The endpoint returns metadata, not copyrighted verse bodies or artificial translations.
+Route::get('salahaldin/v1/quran/editions', function () {
+    $path = resource_path('data/salahaldin_quran_editions.json');
+    abort_unless(is_file($path), 404);
+    return response()->file($path, [
+        'Content-Type' => 'application/json; charset=utf-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+});

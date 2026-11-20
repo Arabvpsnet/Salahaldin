@@ -1,0 +1,421 @@
+// ignore_for_file: deprecated_member_use
+
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:salatime/controller/package_prayer_time_controller.dart';
+import 'package:salatime/helper/date_converter.dart';
+import 'package:salatime/helper/prayer_display_phase.dart';
+import 'package:salatime/helper/translator_helper.dart';
+import 'package:salatime/theme/modern_light_theme.dart';
+import 'package:salatime/theme/brand_colors.dart';
+import 'package:salatime/util/dimensions.dart';
+import 'package:salatime/util/images.dart';
+import 'package:salatime/util/styles.dart';
+
+class ModernNextPrayerCard extends StatefulWidget {
+  final PrayerTimeController prayerTimeController;
+  final DateTime Function() now;
+  const ModernNextPrayerCard({
+    super.key,
+    required this.prayerTimeController,
+    this.now = DateTime.now,
+  });
+
+  @override
+  State<ModernNextPrayerCard> createState() => _ModernNextPrayerCardState();
+}
+
+class _ModernNextPrayerCardState extends State<ModernNextPrayerCard> {
+  Timer? _ticker;
+  Duration _remaining = Duration.zero;
+  final ScrollController _prayerScrollController = ScrollController();
+  int? _positionedPrayerIndex;
+  int? _scheduledPrayerIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _recompute();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _recompute());
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    _prayerScrollController.dispose();
+    super.dispose();
+  }
+
+  void _keepActivePrayerVisible(int activeIndex) {
+    if (_positionedPrayerIndex == activeIndex ||
+        _scheduledPrayerIndex == activeIndex) {
+      return;
+    }
+
+    _scheduledPrayerIndex = activeIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _scheduledPrayerIndex = null;
+      if (!_prayerScrollController.hasClients) return;
+
+      final position = _prayerScrollController.position;
+      final itemCenter =
+          (activeIndex * _prayerChipExtent) + (_prayerChipWidth / 2);
+      final targetOffset = (itemCenter - (position.viewportDimension / 2))
+          .clamp(0.0, position.maxScrollExtent)
+          .toDouble();
+      final shouldAnimate = _positionedPrayerIndex != null;
+
+      _positionedPrayerIndex = activeIndex;
+      if ((position.pixels - targetOffset).abs() < 0.5) return;
+
+      if (shouldAnimate) {
+        _prayerScrollController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _prayerScrollController.jumpTo(targetOffset);
+      }
+    });
+  }
+
+  void _recompute() {
+    final timeStr = widget.prayerTimeController.currentWaktTime.value;
+    try {
+      final now = widget.now();
+      var target = DateFormat('HH:mm').parse(timeStr);
+      target = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        target.hour,
+        target.minute,
+      );
+      if (target.isBefore(now)) target = target.add(const Duration(days: 1));
+      if (mounted) setState(() => _remaining = target.difference(now));
+    } catch (_) {
+      if (mounted) setState(() => _remaining = Duration.zero);
+    }
+  }
+
+  String get _countdownText {
+    final h = _remaining.inHours.toString().padLeft(2, '0');
+    final m = (_remaining.inMinutes % 60).toString().padLeft(2, '0');
+    final s = (_remaining.inSeconds % 60).toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+
+  int _activePrayerIndex(List<String?> times) {
+    final now = widget.now();
+    for (var i = 0; i < times.length; i++) {
+      final t = times[i];
+      if (t == null) continue;
+      try {
+        final parsed = DateFormat('HH:mm').parse(t);
+        final today = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          parsed.hour,
+          parsed.minute,
+        );
+        if (today.isAfter(now)) return i;
+      } catch (_) {
+        continue;
+      }
+    }
+    return 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.prayerTimeController;
+    final is24HourFormat = controller.is24HourFormat.value;
+    final prayerData = controller.prayerTimeModel?.data;
+
+    final times = [
+      prayerData?.fajrStart,
+      prayerData?.zuhrStart,
+      prayerData?.asrStart,
+      prayerData?.maghribStart,
+      prayerData?.ishaStart,
+    ];
+    final activeIndex = _activePrayerIndex(times);
+    _keepActivePrayerVisible(activeIndex);
+
+    return Container(
+      padding: const EdgeInsets.all(Dimensions.PADDING_SIZE_DEFAULT),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColorModern.primaryGreen,
+            AppColorModern.primaryGreenLight,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(Dimensions.RADIUS_EXTRA_LARGE),
+        boxShadow: [
+          BoxShadow(
+            color: AppColorModern.emerald.withOpacity(0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'next_prayer'.tr,
+                  style: robotoRegular.copyWith(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: Dimensions.FONT_SIZE_SMALL,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  controller.currentWaqtName.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: robotoBold.copyWith(
+                    color: Colors.white,
+                    fontSize: Dimensions.FONT_SIZE_OVER_LARGE + 4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.16),
+                    borderRadius: BorderRadius.circular(
+                      Dimensions.RADIUS_DEFAULT,
+                    ),
+                  ),
+                  child: Text(
+                    translateText(_countdownText),
+                    style: robotoBold.copyWith(
+                      color: PrayerDisplayPhase.isApproaching(_remaining)
+                          ? BrandColors.countdownWarningOnPrimary
+                          : Colors.white,
+                      fontSize: Dimensions.FONT_SIZE_DEFAULT,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      translateText(
+                        DateConverter.formatPrayerTime(
+                          controller.currentWaktTime.value,
+                          is24HourFormat,
+                        ),
+                      ),
+                      style: robotoMedium.copyWith(
+                        color: Colors.white70,
+                        fontSize: Dimensions.FONT_SIZE_EXTRA_SMALL,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.volume_up_rounded,
+                      size: 12,
+                      color: Colors.white70,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      'adhan'.tr,
+                      style: robotoRegular.copyWith(
+                        color: Colors.white70,
+                        fontSize: Dimensions.FONT_SIZE_EXTRA_SMALL,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          Container(
+            width: 0.5,
+            height: _chipHeight,
+            color: Colors.white.withOpacity(0.3),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+          ),
+
+          Expanded(
+            child: SizedBox(
+              height: _chipHeight,
+              child: ListView(
+                controller: _prayerScrollController,
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  _PrayerChip(
+                    icon: Images.ModernPrayer_FajrSunrise,
+                    name: 'fajr'.tr,
+                    time: prayerData?.fajrStart ?? '00:00',
+                    is24HourFormat: is24HourFormat,
+                    status: _chipStatus(0, activeIndex),
+                  ),
+                  _PrayerChip(
+                    icon: Images.ModernPrayer_DhuhrSun,
+                    name: prayerData?.isJumma == true
+                        ? 'jumuah'.tr
+                        : 'dhuhr'.tr,
+                    time: prayerData?.zuhrStart ?? '00:00',
+                    is24HourFormat: is24HourFormat,
+                    status: _chipStatus(1, activeIndex),
+                  ),
+                  _PrayerChip(
+                    icon: Images.ModernPrayer_AsrCloudy,
+                    name: 'asr'.tr,
+                    time: prayerData?.asrStart ?? '00:00',
+                    is24HourFormat: is24HourFormat,
+                    status: _chipStatus(2, activeIndex),
+                  ),
+                  _PrayerChip(
+                    icon: Images.ModernPrayer_MaghribSunset,
+                    name: 'magrib'.tr,
+                    time: prayerData?.maghribStart ?? '00:00',
+                    is24HourFormat: is24HourFormat,
+                    status: _chipStatus(3, activeIndex),
+                  ),
+                  _PrayerChip(
+                    icon: Images.ModernPrayer_IshaMoon,
+                    name: 'isha'.tr,
+                    time: prayerData?.ishaStart ?? '00:00',
+                    is24HourFormat: is24HourFormat,
+                    status: _chipStatus(4, activeIndex),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static const double _chipHeight = 108;
+  static const double _prayerChipWidth = 64;
+  static const double _prayerChipSpacing = 8;
+  static const double _prayerChipExtent = _prayerChipWidth + _prayerChipSpacing;
+
+  _ChipStatus _chipStatus(int index, int activeIndex) {
+    if (index < activeIndex) return _ChipStatus.passed;
+    if (index == activeIndex) return _ChipStatus.active;
+    return _ChipStatus.upcoming;
+  }
+}
+
+enum _ChipStatus { passed, active, upcoming }
+
+class _PrayerChip extends StatelessWidget {
+  final String icon;
+  final String name;
+  final String time;
+  final bool is24HourFormat;
+  final _ChipStatus status;
+
+  const _PrayerChip({
+    required this.icon,
+    required this.name,
+    required this.time,
+    required this.is24HourFormat,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = status == _ChipStatus.active;
+    return Container(
+      width: _ModernNextPrayerCardState._prayerChipWidth,
+      height: _ModernNextPrayerCardState._chipHeight,
+      margin: const EdgeInsets.only(
+        right: _ModernNextPrayerCardState._prayerChipSpacing,
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white : null,
+        borderRadius: BorderRadius.circular(Dimensions.RADIUS_DEFAULT),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset(icon, height: 30),
+
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: robotoMedium.copyWith(
+              fontSize: Dimensions.FONT_SIZE_SMALL,
+              color: isActive ? AppColorModern.emeraldDark : Colors.white,
+            ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            translateText(DateConverter.formatPrayerTime(time, is24HourFormat)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: robotoRegular.copyWith(
+              fontSize: Dimensions.FONT_SIZE_SMALL,
+              color: isActive
+                  ? AppColorModern.emeraldDark.withOpacity(0.8)
+                  : Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 3),
+          _StatusGlyph(status: status, isActive: isActive),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusGlyph extends StatelessWidget {
+  final _ChipStatus status;
+  final bool isActive;
+  const _StatusGlyph({required this.status, required this.isActive});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? AppColorModern.emerald : Colors.white70;
+    switch (status) {
+      case _ChipStatus.passed:
+        return Icon(Icons.check, size: 12, color: color);
+      case _ChipStatus.active:
+        return Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        );
+      case _ChipStatus.upcoming:
+        return Icon(
+          Icons.circle_outlined,
+          size: 10,
+          color: color.withOpacity(0.8),
+        );
+    }
+  }
+}

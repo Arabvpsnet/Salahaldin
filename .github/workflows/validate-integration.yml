@@ -1,0 +1,62 @@
+name: Salahaldin integration checks
+on:
+  push:
+    branches: [integration/salatime-sakina-multilingual]
+    paths:
+      - 'tv/**'
+      - 'server/**'
+      - 'shared/**'
+      - '.github/workflows/validate-integration.yml'
+  pull_request:
+    paths:
+      - 'tv/**'
+      - 'server/**'
+      - 'shared/**'
+concurrency:
+  group: salahaldin-checks-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  tv:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tv/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+  api-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php -l server/routes/api.php
+      - run: php -l server/app/Http/Controllers/Quran/PrayerTime/PrayerTimeImportController.php
+      - run: python3 -m json.tool shared/contracts/mosque-schedule.schema.json >/dev/null
+      - run: python3 -m unittest discover -s tools/prayer_schedule -p 'test_*.py'
+      - run: test -f mobile/pubspec.yaml && test -f tv/LICENSE && test -f server/LICENSE
+
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub

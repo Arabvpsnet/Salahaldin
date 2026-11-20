@@ -1,0 +1,28 @@
+name: Import licensed upstream app sources
+on:
+  push:
+    branches:
+      - integration/salatime-sakina-multilingual
+    paths:
+      - '.github/workflows/import-sources.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Import pinned upstream projects and apply Salahaldin adaptations
+        run: bash scripts/bootstrap-integration.sh
+      - name: Verify imported project layout
+        run: |
+          test -f mobile/pubspec.yaml
+          test -f tv/package.json
+          test -f server/composer.json
+          test -f mobile/LICENSE
+          test -f tv/LICENSE
+          test -f server/LICENSE
