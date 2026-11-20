@@ -39,3 +39,20 @@ jobs:
       - run: php -l server/app/Http/Controllers/Quran/PrayerTime/PrayerTimeImportController.php
       - run: python3 -m json.tool shared/contracts/mosque-schedule.schema.json >/dev/null
       - run: test -f mobile/pubspec.yaml && test -f tv/LICENSE && test -f server/LICENSE
+
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub
