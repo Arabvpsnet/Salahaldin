@@ -1,0 +1,27 @@
+name: Latest frontend dependency upgrades — compatibility lab
+on:
+  push:
+    branches: [upgrade/frontend-latest-lab]
+    paths:
+      - 'tools/upgrade/refresh-js.sh'
+      - '.github/workflows/frontend-major-migration.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Test latest major versions of all frontend libraries
+        run: bash tools/upgrade/refresh-js.sh
+      - name: Report remaining npm vulnerabilities
+        if: always()
+        shell: bash
+        run: |
+          cd tv && npm audit --audit-level=high || true
+          cd ../server && npm audit --audit-level=high || true
