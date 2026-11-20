@@ -1,0 +1,434 @@
+import 'package:salatime/view/screens/daily/daily_verse_card.dart';
+// ignore_for_file: deprecated_member_use
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
+import 'package:salatime/controller/internet_check_controller.dart';
+import 'package:salatime/controller/package_prayer_time_controller.dart';
+import 'package:salatime/controller/prayer_time_adjustment.dart';
+import 'package:salatime/controller/quran_settings_controller.dart';
+import 'package:salatime/controller/theme_controller.dart';
+import 'package:salatime/helper/date_converter.dart';
+import 'package:salatime/helper/route_helper.dart';
+import 'package:salatime/helper/time_adjustment_helper.dart';
+import 'package:salatime/helper/translator_helper.dart';
+import 'package:salatime/shimmer/all_shimmer_loder.dart';
+import 'package:salatime/util/dimensions.dart';
+import 'package:salatime/util/images.dart';
+import 'package:salatime/util/styles.dart';
+import 'package:salatime/view/screens/home/classic/widget/bannder_widget.dart';
+import 'package:salatime/view/screens/home/classic/widget/feature_item_widget.dart';
+import 'package:salatime/view/screens/home/classic/widget/today_prayer_list_item.dart';
+
+/// The original ("Classic") home screen design. This widget is purely
+/// presentational — all data bootstrapping (location, prayer times, mosque
+/// settings) is handled once by the [HomeScreen] router above it.
+class ClassicHomeScreen extends StatelessWidget {
+  const ClassicHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasInternet = Get.find<InternetController>().hasInternet.value;
+    return GetBuilder<SettingsController>(
+      builder: (settingsController) {
+        return GetBuilder<PrayerTimeController>(
+          builder: (prayerTimeController) {
+            final isLoading = _isLoadingState(
+              settingsController,
+              prayerTimeController,
+            );
+            final mosqueData = settingsController.mosqueSettingsApiData?.data;
+
+            return Scaffold(
+              appBar: isLoading || mosqueData == null
+                  ? null
+                  : _buildAppBar(context, mosqueData, prayerTimeController),
+              body: SafeArea(
+                top: true,
+                child: isLoading || mosqueData == null && !hasInternet
+                    ? const DashbordShimmerScreen()
+                    : _buildBody(context, prayerTimeController),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _isLoadingState(
+    SettingsController settingsController,
+    PrayerTimeController prayerTimeController,
+  ) {
+    return settingsController.isMosqueSettingsLoading.value ||
+        prayerTimeController.isprayerTimeLoading.value ||
+        settingsController.mosqueSettingsApiData == null;
+  }
+
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    dynamic mosqueData,
+    PrayerTimeController prayerTimeController,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = Get.isDarkMode;
+
+    return AppBar(
+      backgroundColor: isDark ? theme.cardColor : theme.primaryColor,
+      elevation: 0,
+      centerTitle: false,
+      title: _buildAppBarTitle(context, mosqueData, prayerTimeController),
+      actions: _buildAppBarActions(context, isDark, theme),
+    );
+  }
+
+  Widget _buildAppBarTitle(
+    BuildContext context,
+    dynamic mosqueData,
+    PrayerTimeController prayerTimeController,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = Get.isDarkMode;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          mosqueData.mosqueName.toString(),
+          style: robotoRegular.copyWith(
+            fontSize: Dimensions.FONT_SIZE_OVER_LARGE + 2,
+            color: isDark ? null : theme.cardColor,
+          ),
+        ),
+        Row(
+          children: [
+            SvgPicture.asset(
+              Images.Icon_Location,
+              height: 14,
+              fit: BoxFit.fill,
+              color: theme.hintColor,
+            ),
+            const SizedBox(width: 3),
+            Expanded(
+              child: Obx(
+                () => Text(
+                  prayerTimeController.saveAddress.value.isNotEmpty
+                      ? prayerTimeController.saveAddress.value
+                      : prayerTimeController.currentAddress.value,
+                  style: robotoRegular.copyWith(
+                    fontSize: Dimensions.FONT_SIZE_DEFAULT,
+                    color: theme.hintColor,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildAppBarActions(
+    BuildContext context,
+    bool isDark,
+    ThemeData theme,
+  ) {
+    return [
+      IconButton(
+        tooltip: "light_or_dark_mode".tr,
+        icon: SvgPicture.asset(
+          isDark ? Images.Icon_day_mode : Images.Icon_dark_mode,
+          height: 25,
+          fit: BoxFit.fill,
+          color: isDark ? theme.primaryColor : theme.cardColor,
+        ),
+        onPressed: () => Get.find<ThemeController>().toggleTheme(),
+      ),
+    ];
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    PrayerTimeController prayerTimeController,
+  ) {
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const BannerWidget(),
+          const DailyVerseCard(),
+          const SizedBox(height: Dimensions.PADDING_SIZE_EXTRA_SMALL),
+          _buildPrayerTimesSection(prayerTimeController),
+          const SizedBox(height: Dimensions.PADDING_SIZE_DEFAULT),
+          _buildFeaturesGrid(context),
+          const SizedBox(height: Dimensions.PADDING_SIZE_DEFAULT * 3),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrayerTimesSection(PrayerTimeController prayerTimeController) {
+    return GetBuilder<PrayerTimeController>(
+      builder: (controller) {
+        final is24HourFormat = controller.is24HourFormat.value;
+        final prayerData = controller.prayerTimeModel?.data;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Dimensions.PADDING_SIZE_DEFAULT,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPrayerTimesHeader(controller),
+              const SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
+              _buildPrayerTimesGrid(prayerData, is24HourFormat),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPrayerTimesHeader(PrayerTimeController controller) {
+    return Obx(
+      () => Text(
+        "${"todays_Prayer_Time_in".tr} ${controller.saveAddress.value.isNotEmpty ? controller.saveAddress.value : controller.currentAddress.value}",
+        textAlign: TextAlign.left,
+        style: robotoRegular.copyWith(
+          fontSize: Dimensions.FONT_SIZE_LARGE,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(Get.context!).primaryColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrayerTimesGrid(dynamic prayerData, bool is24HourFormat) {
+    return Column(
+      children: [
+        _buildPrayerRow(
+          leftPrayer: _buildPrayerCard(
+            icon: Images.Icon_Fajr,
+            name: 'fajr'.tr,
+            prayerKey: 'fajr',
+            time: prayerData?.fajrStart ?? "00:00",
+            is24HourFormat: is24HourFormat,
+          ),
+          rightPrayer: _buildPrayerCard(
+            icon: Images.Sunrise,
+            name: 'sunrise'.tr,
+            prayerKey: 'sunrise',
+            time: prayerData?.sunrise ?? "00:00",
+            is24HourFormat: is24HourFormat,
+            isSunrise: true,
+          ),
+        ),
+        const SizedBox(height: Dimensions.PADDING_SIZE_DEFAULT),
+        _buildPrayerRow(
+          leftPrayer: _buildPrayerCard(
+            icon: Images.Icon_Dhuhr,
+            name: prayerData?.isJumma == true ? 'jumuah'.tr : 'dhuhr'.tr,
+            prayerKey: 'zuhr',
+            time: prayerData?.zuhrStart ?? "00:00",
+            is24HourFormat: is24HourFormat,
+          ),
+          rightPrayer: _buildPrayerCard(
+            icon: Images.Icon_Asr,
+            name: 'asr'.tr,
+            prayerKey: 'asr',
+            time: prayerData?.asrStart ?? "00:00",
+            is24HourFormat: is24HourFormat,
+          ),
+        ),
+        const SizedBox(height: Dimensions.PADDING_SIZE_DEFAULT),
+        _buildPrayerRow(
+          leftPrayer: _buildPrayerCard(
+            icon: Images.Icon_Maghrib,
+            name: 'magrib'.tr,
+            prayerKey: 'maghrib',
+            time: prayerData?.maghribStart ?? "00:00",
+            is24HourFormat: is24HourFormat,
+          ),
+          rightPrayer: _buildPrayerCard(
+            icon: Images.Icon_Isha,
+            name: 'isha'.tr,
+            prayerKey: 'isha',
+            time: prayerData?.ishaStart ?? "00:00",
+            is24HourFormat: is24HourFormat,
+          ),
+        ),
+        const SizedBox(height: Dimensions.PADDING_SIZE_DEFAULT),
+        if (Get.find<SettingsController>()
+                .mosqueSettingsApiData
+                ?.data
+                ?.ramadanSchedule ==
+            true)
+          _buildPrayerRow(
+            leftPrayer: _buildPrayerCard(
+              icon: Images.sehri,
+              name: 'Sehri'.tr,
+              prayerKey: 'sehri',
+              time:
+                  prayerData?.sehriEnd == "0:00" ||
+                      prayerData?.sehriEnd == null ||
+                      prayerData?.sehriEnd == "00:00"
+                  ? "0.00"
+                  : prayerData?.sehriEnd ?? "0.00",
+              is24HourFormat: is24HourFormat,
+            ),
+            rightPrayer: _buildPrayerCard(
+              icon: Images.ifter,
+              name: 'Iftar'.tr,
+              prayerKey: 'iftar',
+              time:
+                  prayerData?.iftarStart == "0:00" ||
+                      prayerData?.iftarStart == null ||
+                      prayerData?.iftarStart == "00:00"
+                  ? "0.00"
+                  : prayerData?.iftarStart ?? "0.00",
+              is24HourFormat: is24HourFormat,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPrayerRow({
+    required Widget leftPrayer,
+    required Widget rightPrayer,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          leftPrayer,
+          const SizedBox(width: Dimensions.PADDING_SIZE_DEFAULT),
+          rightPrayer,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrayerCard({
+    required String icon,
+    required String name,
+    required String time,
+    required bool is24HourFormat,
+    String? prayerKey,
+    bool isSunrise = false,
+  }) {
+    return GetBuilder<PrayerTimeAdjustmentController>(
+      builder: (_) {
+        final adjustedTime = prayerKey != null
+            ? TimeAdjustmentHelper().getDisplayTime(
+                prayerKey: prayerKey,
+                defaultTime: time,
+              )
+            : time;
+
+        final displayTime = translateText(
+          DateConverter.formatPrayerTime(adjustedTime, is24HourFormat),
+        );
+
+        return TodaysprayerWidget(
+          iconImage: icon,
+          prayerName: name,
+          adhan: displayTime,
+          jamah: displayTime,
+          isSunrise: isSunrise,
+          sunriseStart: isSunrise ? displayTime : "00:00",
+          isAdjusted: prayerKey != null
+              ? TimeAdjustmentHelper().isTimeAdjusted(prayerKey)
+              : false,
+          adjustmentText: prayerKey != null
+              ? TimeAdjustmentHelper().getAdjustmentText(prayerKey)
+              : '',
+        );
+      },
+    );
+  }
+
+  Widget _buildFeaturesGrid(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Dimensions.PADDING_SIZE_DEFAULT,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: Dimensions.PADDING_SIZE_DEFAULT,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(Dimensions.RADIUS_DEFAULT),
+          boxShadow: [
+            BoxShadow(
+              color: Get.isDarkMode ? Colors.grey[850]! : Colors.grey[200]!,
+              spreadRadius: 1,
+              blurRadius: 5,
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Dimensions.PADDING_SIZE_GRID_SMALL,
+          ),
+          child: GridView.count(
+            shrinkWrap: true,
+            primary: false,
+            crossAxisCount: 4,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            addAutomaticKeepAlives: false,
+            children: _buildFeatureItems(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildFeatureItems() {
+    return [
+      _buildFeatureItem(
+        name: "audio_quran".tr,
+        iconPath: Images.Iocn_Audio,
+        route: RouteHelper.recters,
+      ),
+      _buildFeatureItem(
+        name: "hadith".tr,
+        iconPath: Images.Icon_Hadith,
+        route: RouteHelper.hadithBookName,
+      ),
+      _buildFeatureItem(
+        name: "allah_name".tr,
+        iconPath: Images.Icon_Allah_99_name,
+        route: RouteHelper.sifatName,
+      ),
+      _buildFeatureItem(
+        name: "dua".tr,
+        iconPath: Images.Icon_Dua,
+        route: RouteHelper.dua,
+      ),
+      _buildFeatureItem(
+        name: "dikir".tr,
+        iconPath: Images.Icon_Dikir,
+        route: RouteHelper.dhikr,
+      ),
+    ];
+  }
+
+  Widget _buildFeatureItem({
+    required String name,
+    required String iconPath,
+    required String route,
+  }) {
+    return FeatureItemWidget(
+      itemName: name,
+      itemIconPath: iconPath,
+      onPressed: () => Get.toNamed(route),
+    );
+  }
+}

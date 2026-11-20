@@ -1,0 +1,147 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:salatime/controller/home_layout_controller.dart';
+import 'package:salatime/controller/internet_check_controller.dart';
+import 'package:salatime/controller/package_prayer_time_controller.dart';
+import 'package:salatime/controller/quran_settings_controller.dart';
+import 'package:salatime/helper/device_clock_change.dart';
+import 'package:salatime/helper/islamic_calendar.dart';
+import 'package:salatime/helper/location_auto_update_service.dart';
+import 'package:salatime/helper/prayer_time_startup.dart';
+import 'package:salatime/helper/salat_waqt_service.dart';
+import 'package:salatime/view/screens/home/classic/classic_home_screen.dart';
+import 'package:salatime/view/screens/home/modern/modern_home_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  Timer? _midnight;
+  Timer? _clockWatch;
+  final _elapsed = Stopwatch()..start();
+  DeviceClockChange _clockChange = DeviceClockChange();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _armMidnightRefresh();
+    _armClockWatch();
+    unawaited(IslamicCalendarPreferences.initialize());
+    _loadInitialData();
+  }
+
+  void _armMidnightRefresh() {
+    _midnight?.cancel();
+    final now = DateTime.now();
+    _midnight = Timer(
+      DateTime(now.year, now.month, now.day + 1).difference(now),
+      () {
+        if (!mounted) return;
+        _refreshAlarms();
+        _armMidnightRefresh();
+      },
+    );
+  }
+
+  void _armClockWatch() {
+    _clockWatch?.cancel();
+    _clockChange = DeviceClockChange();
+    _clockChange.observe(DateTime.now(), _elapsed.elapsed);
+    _clockWatch = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_clockChange.observe(DateTime.now(), _elapsed.elapsed)) {
+        _refreshAlarms();
+        _armMidnightRefresh();
+      }
+    });
+  }
+
+  void _refreshAlarms() {
+    unawaited(
+      SalatWaqtService.initializeSalatWaqt().catchError((Object error) {
+        Get.log('Unable to refresh prayer alarms: $error');
+      }),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Reconcile Always/While Using changes made in iOS/Android Settings.
+      _startLocationUpdates();
+      _refreshAlarms();
+      _armMidnightRefresh();
+      _armClockWatch();
+    } else if (state == AppLifecycleState.paused) {
+      _clockWatch?.cancel();
+      _midnight?.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _clockWatch?.cancel();
+    _elapsed.stop();
+    _midnight?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _loadInitialData() {
+    Get.find<InternetController>().checkConnection();
+    Get.find<SettingsController>().fetchMosqueSettingsData();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Also covers entering home after onboarding or recreating its route.
+      await PrayerTimeStartup.restore();
+      if (!mounted) return;
+      final prayerTimeController = Get.find<PrayerTimeController>();
+
+      // Refresh the saved location after local times are already displayed.
+      await prayerTimeController.getLocation();
+      if (!mounted) return;
+      _refreshAlarms();
+
+      // Adapt adhan times when the user moves (if opted in).
+      _startLocationUpdates();
+    });
+  }
+
+  void _startLocationUpdates() {
+    unawaited(
+      LocationAutoUpdateService.start().catchError((Object error) {
+        Get.log('Unable to start automatic location updates: $error');
+      }),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final layout = Get.find<HomeLayoutController>().currentLayout.value;
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0, 0.03),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
+            child: child,
+          ),
+        ),
+        child: layout == HomeLayoutController.classic
+            ? const ClassicHomeScreen(key: ValueKey('classic'))
+            : ModernHomeScreen(key: ValueKey('modern')),
+      );
+    });
+  }
+}
