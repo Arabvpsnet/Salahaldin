@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-from pathlib import PurePosixPath
+from pathlib import Path
 
 files = subprocess.check_output(["git", "ls-files", "-z"]).decode("utf-8").split("\0")
 bad_names = re.compile(r"(?i)(^|/)(\.env|google-services\.json|GoogleService-Info\.plist|id_rsa|id_ed25519)(\.|$)")
@@ -19,7 +19,7 @@ patterns = {
 excluded = ("server/vendor/", "mobile/assets/", "tv/public/", "server/public/", "tv/src/data/", "server/database/seeders/")
 issues = []
 for name in filter(None, files):
-    path = PurePosixPath(name)
+    path = Path(name)
     if not name.endswith(".env.example") and (bad_names.search(name) or path.suffix.lower() in bad_ext):
         issues.append((name, "sensitive filename"))
     if name.startswith(excluded) or path.suffix.lower() not in {".php", ".js", ".ts", ".dart", ".json", ".yml", ".yaml", ".py", ".env", ".md"}:
