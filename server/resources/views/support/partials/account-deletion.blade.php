@@ -1,5 +1,5 @@
 <section id="delete-account" aria-label="Delete your SalaTime account or data" tabindex="-1">
-    @foreach (['en' => 'English', 'fr' => 'Français', 'ar' => 'العربية', 'es' => 'Español'] as $language => $languageName)
+    @foreach (['en' => 'English', 'fr' => 'Français', 'ar' => 'العربية', 'bn' => 'বাংলা', 'hi' => 'हिन्दी', 'es' => 'Español'] as $language => $languageName)
         @php($deletion = trans('account_deletion', [], $language))
         <details id="delete-account-{{ $language }}" lang="{{ $language }}" dir="{{ $language === 'ar' ? 'rtl' : 'ltr' }}" @if ($language === 'en') open @endif>
             <summary><strong>{{ $languageName }} — {{ $deletion['title'] }}</strong></summary>
