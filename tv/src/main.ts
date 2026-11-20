@@ -29,7 +29,7 @@ import { icons } from './ui/icons';
 
 // ۞ (U+06DE) glyph from Noto Kufi Arabic (SIL OFL), subset to that single character (~1 KB).
 try {
-  const orn = new FontFace('Sakina Ornament', `url(${ornamentFont})`, { unicodeRange: 'U+06DE' });
+  const orn = new FontFace('Salahaldin Ornament', `url(${ornamentFont})`, { unicodeRange: 'U+06DE' });
   document.fonts.add(orn);
   void orn.load();
 } catch { /* very old WebView: falls back to the system glyph */ }
@@ -46,7 +46,7 @@ if (demo) {
     const theme = params.get('theme');
     if (theme === 'emerald' || theme === 'night' || theme === 'sand' || theme === 'royal') s.display.theme = theme;
     const lang = params.get('lang');
-    if (lang === 'fr' || lang === 'en' || lang === 'ar') s.lang = lang;
+    if (lang === 'fr' || lang === 'en' || lang === 'ar' || lang === 'da' || lang === 'tr') s.lang = lang;
     const o = params.get('orient');
     if (o === 'portrait' || o === 'landscape' || o === 'auto') s.display.orientation = o;
     const bg = params.get('bg');

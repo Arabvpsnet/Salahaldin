@@ -16,7 +16,7 @@ import { handleArrow, isBackKey } from './spatial-nav';
 const BACKGROUNDS = backgroundsData as { id: string; label: string; labelAr?: string; labelEn?: string; author: string; license: string }[];
 const bgLabel = (b: (typeof BACKGROUNDS)[number]) => (lang === 'ar' ? b.labelAr || b.label : (lang === 'en' || lang === 'da' || lang === 'tr') ? b.labelEn || b.label : b.label);
 const VERSION = '1.1.0';
-const REPO = 'https://github.com/filinodz/sakina';
+const REPO = 'https://github.com/Arabvpsnet/Salahaldin';
 
 type Section = 'mosque' | 'location' | 'calc' | 'iqama' | 'athan' | 'display' | 'backup';
 const TAB_ICONS: Record<Section, string> = {
@@ -629,7 +629,7 @@ export class SettingsPanel {
         h('p', { class: 'note wide' }, L('Exportez la configuration pour la copier sur d’autres écrans de la mosquée (les images et MP3 restent sur l’appareil).', 'Export settings to copy them to other screens (images and MP3s stay on the device).', 'صدّر الإعدادات لنسخها إلى شاشات أخرى.')),
         h('div', { class: 'row wide' },
           this.btn(L('Exporter (.json)', 'Export (.json)', 'تصدير'), () => {
-            const a = h('a', { href: URL.createObjectURL(new Blob([settings.export()], { type: 'application/json' })), download: `sakina-${(s.mosque.name || 'config').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json` });
+            const a = h('a', { href: URL.createObjectURL(new Blob([settings.export()], { type: 'application/json' })), download: `salahaldin-${(s.mosque.name || 'config').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json` });
             document.body.appendChild(a); a.click(); a.remove();
           }, icons.download, 'primary'),
           this.btn(L('Importer', 'Import', 'استيراد'), () => importInput.click(), icons.upload), importInput)),
@@ -646,7 +646,7 @@ export class SettingsPanel {
         h('div', { class: 'about wide' },
           h('div', { class: 'about-logo', html: brandMark() }),
           h('div', null,
-            h('b', null, `Sakina ${VERSION}`), h('span', { class: 'ar' }, ' — سكينة'),
+            h('b', null, `Salahaldin ${VERSION}`), h('span', { class: 'ar' }, ' — صلاح الدين'),
             h('p', null, L('Application libre et gratuite (licence MIT), réalisée fi sabilillah. Horaires : adhan-js (Jean Meeus), API Aladhan. Coran : Tanzil. Adhkar : Hisn al-Muslim. Photos : Wikimedia Commons.', 'Free & open-source (MIT), made fi sabilillah. Times: adhan-js (Jean Meeus), Aladhan API. Qur’an: Tanzil. Adhkar: Hisn al-Muslim. Photos: Wikimedia Commons.', 'تطبيق مجاني ومفتوح المصدر، في سبيل الله.')),
             h('a', { href: REPO, target: '_blank', rel: 'noopener' }, REPO.replace('https://', ''))))),
     ];

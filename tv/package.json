@@ -1,13 +1,12 @@
 {
-  "name": "sakina",
+  "name": "salahaldin-tv",
   "version": "1.1.0",
-  "description": "Sakina — écran de prière premium et open source pour mosquées, foyers et Smart TV. Horaires précis, iqama, adhan, versets et adhkar.",
+  "description": "Salahaldin multilingual mosque TV app with adhan, iqamah, adhkar and live mosque calendars",
   "type": "module",
   "license": "MIT",
-  "author": "filinodz (https://github.com/filinodz)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/filinodz/sakina"
+    "url": "https://github.com/Arabvpsnet/Salahaldin/tree/main/tv"
   },
   "keywords": [
     "mosque",

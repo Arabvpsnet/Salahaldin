@@ -17,11 +17,11 @@ export default defineConfig({
       injectRegister: false, // registered in src/main.ts (with error handling)
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'Sakina — Écran de prière',
-        short_name: 'Sakina',
-        description: 'Horaires de prière, iqama, adhan, versets et adhkar pour mosquées et foyers.',
-        lang: 'fr',
-        dir: 'ltr',
+        name: 'Salahaldin — صلاة وإقامة',
+        short_name: 'Salahaldin',
+        description: 'Prayer times, iqamah, Quran verses and adhkar for mosque and home screens.',
+        lang: 'ar',
+        dir: 'rtl',
         display: 'fullscreen',
         orientation: 'any',
         background_color: '#04110d',
