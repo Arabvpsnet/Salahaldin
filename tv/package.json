@@ -36,25 +36,25 @@
     "android:apk": "vite build && cap sync android && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
-    "@capacitor/android": "^8.6.0",
+    "@capacitor/android": "^8.6.2",
     "@capacitor/app": "^8.1.2",
-    "@capacitor/core": "^8.6.0",
+    "@capacitor/core": "^8.6.2",
     "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource/amiri": "^5.3.0",
     "@fontsource/amiri-quran": "^5.3.0",
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/reem-kufi": "^5.3.0",
     "adhan": "^4.4.6",
-    "lucide": "^1.70.0"
+    "lucide": "^1.77.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.6.0",
+    "@capacitor/cli": "^8.6.2",
     "@phosphor-icons/core": "^2.1.1",
-    "puppeteer-core": "^25.16.0",
-    "sharp": "^0.33.5",
+    "puppeteer-core": "^25.18.1",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2",
-    "vite": "^8.3.6",
+    "vite": "^8.3.8",
     "vite-plugin-pwa": "^2.0.0",
-    "vitest": "^4.1.12"
+    "vitest": "^5.1.1"
   }
 }
