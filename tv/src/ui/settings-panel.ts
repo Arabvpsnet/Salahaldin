@@ -16,7 +16,7 @@ import { handleArrow, isBackKey } from './spatial-nav';
 const BACKGROUNDS = backgroundsData as { id: string; label: string; labelAr?: string; labelEn?: string; author: string; license: string }[];
 const bgLabel = (b: (typeof BACKGROUNDS)[number]) => (lang === 'ar' ? b.labelAr || b.label : (lang === 'en' || lang === 'da' || lang === 'tr') ? b.labelEn || b.label : b.label);
 const VERSION = '1.1.0';
-const REPO = 'https://github.com/filinodz/sakina';
+const REPO = 'https://github.com/Arabvpsnet/Salahaldin';
 
 type Section = 'mosque' | 'location' | 'calc' | 'iqama' | 'athan' | 'display' | 'backup';
 const TAB_ICONS: Record<Section, string> = {
@@ -232,10 +232,14 @@ export class SettingsPanel {
       const has = key === 'mosque' ? s.mosque.hasImage : s.mosque.hasLogo;
       if (has) void blobUrl(key).then((u) => { if (u) box.style.backgroundImage = `url("${u}")`; });
       const input = h('input', {
-        type: 'file', accept: 'image/*', class: 'file',
+        type: 'file', accept: 'image/png,image/jpeg,image/webp', class: 'file',
         onchange: async (e: Event) => {
           const f = (e.target as HTMLInputElement).files?.[0];
           if (!f) return;
+          if (!['image/png', 'image/jpeg', 'image/webp'].includes(f.type) || f.size > 8 * 1024 * 1024) {
+            alert(L('Image invalide (8 Mo max.)', 'Unsupported image or file exceeds 8 MB', 'صورة غير مدعومة أو أكبر من 8 ميغابايت'));
+            return;
+          }
           const blob = key === 'mosque' ? await resizeImage(f, 1920, 1080) : await resizeImage(f, 512, 512, 'image/png');
           await blobs.set(key, blob);
           settings.set((x) => {
@@ -460,10 +464,15 @@ export class SettingsPanel {
       ...ATHANS,
     ];
     const upload = h('input', {
-      type: 'file', accept: 'audio/*', class: 'file',
+      type: 'file', accept: 'audio/mpeg,.mp3', class: 'file',
       onchange: async (e: Event) => {
         const f = (e.target as HTMLInputElement).files?.[0];
         if (!f) return;
+        if (!['audio/mpeg', 'audio/mp3', 'audio/x-mpeg', ''].includes(f.type) ||
+            !/\\.mp3$/i.test(f.name) || f.size > 10 * 1024 * 1024) {
+          alert(L('MP3 invalide (10 Mo max.)', 'Only MP3 up to 10 MB is accepted', 'يسمح بملفات MP3 حتى 10 ميغابايت'));
+          return;
+        }
         const id = `custom:${Date.now()}`;
         await blobs.set(id, f);
         settings.set((x) => { x.athan.custom.push({ id, name: f.name.replace(/\.[^.]+$/, '') }); x.athan.sound = id; });
@@ -619,7 +628,17 @@ export class SettingsPanel {
       onchange: async (e: Event) => {
         const f = (e.target as HTMLInputElement).files?.[0];
         if (!f) return;
-        try { settings.replace(JSON.parse(await f.text())); invalidate(); this.render(); }
+        if (f.size > 512 * 1024) {
+          alert(L('Fichier trop volumineux', 'Backup exceeds 512 KB', 'النسخة الاحتياطية أكبر من 512 كيلوبايت'));
+          return;
+        }
+        try {
+          const raw: unknown = JSON.parse(await f.text());
+          if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Invalid backup structure');
+          settings.replace(raw);
+          invalidate();
+          this.render();
+        }
         catch { alert(L('Fichier invalide', 'Invalid file', 'ملف غير صالح')); }
       },
     });
@@ -629,7 +648,7 @@ export class SettingsPanel {
         h('p', { class: 'note wide' }, L('Exportez la configuration pour la copier sur d’autres écrans de la mosquée (les images et MP3 restent sur l’appareil).', 'Export settings to copy them to other screens (images and MP3s stay on the device).', 'صدّر الإعدادات لنسخها إلى شاشات أخرى.')),
         h('div', { class: 'row wide' },
           this.btn(L('Exporter (.json)', 'Export (.json)', 'تصدير'), () => {
-            const a = h('a', { href: URL.createObjectURL(new Blob([settings.export()], { type: 'application/json' })), download: `sakina-${(s.mosque.name || 'config').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json` });
+            const a = h('a', { href: URL.createObjectURL(new Blob([settings.export()], { type: 'application/json' })), download: `salahaldin-${(s.mosque.name || 'config').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json` });
             document.body.appendChild(a); a.click(); a.remove();
           }, icons.download, 'primary'),
           this.btn(L('Importer', 'Import', 'استيراد'), () => importInput.click(), icons.upload), importInput)),
@@ -646,7 +665,7 @@ export class SettingsPanel {
         h('div', { class: 'about wide' },
           h('div', { class: 'about-logo', html: brandMark() }),
           h('div', null,
-            h('b', null, `Sakina ${VERSION}`), h('span', { class: 'ar' }, ' — سكينة'),
+            h('b', null, `Salahaldin ${VERSION}`), h('span', { class: 'ar' }, ' — صلاح الدين'),
             h('p', null, L('Application libre et gratuite (licence MIT), réalisée fi sabilillah. Horaires : adhan-js (Jean Meeus), API Aladhan. Coran : Tanzil. Adhkar : Hisn al-Muslim. Photos : Wikimedia Commons.', 'Free & open-source (MIT), made fi sabilillah. Times: adhan-js (Jean Meeus), Aladhan API. Qur’an: Tanzil. Adhkar: Hisn al-Muslim. Photos: Wikimedia Commons.', 'تطبيق مجاني ومفتوح المصدر، في سبيل الله.')),
             h('a', { href: REPO, target: '_blank', rel: 'noopener' }, REPO.replace('https://', ''))))),
     ];

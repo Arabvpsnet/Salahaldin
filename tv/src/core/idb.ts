@@ -48,6 +48,14 @@ export function resizeImage(file: Blob, maxW: number, maxH: number, type = 'imag
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
+      // Reject decompression bombs and invalid image dimensions before canvas allocation.
+      if (img.naturalWidth < 1 || img.naturalHeight < 1 ||
+          img.naturalWidth > 16000 || img.naturalHeight > 16000 ||
+          img.naturalWidth * img.naturalHeight > 40_000_000) {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image pixel dimensions exceed limit'));
+        return;
+      }
       const r = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
       const c = document.createElement('canvas');
       c.width = Math.round(img.naturalWidth * r);
