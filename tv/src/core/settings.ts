@@ -140,9 +140,12 @@ function merge<T>(base: T, over: unknown): T {
     const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
     if (over && typeof over === 'object') {
       for (const k of Object.keys(over as object)) {
+        // A imported backup/local storage must not inject arbitrary properties or prototypes.
+        if (k === '__proto__' || k === 'prototype' || k === 'constructor' ||
+            !Object.prototype.hasOwnProperty.call(base, k)) continue;
         const bv = (base as Record<string, unknown>)[k];
         const ov = (over as Record<string, unknown>)[k];
-        out[k] = bv === undefined ? ov : merge(bv, ov);
+        out[k] = merge(bv, ov);
       }
     }
     return out as T;

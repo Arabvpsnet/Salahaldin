@@ -232,10 +232,14 @@ export class SettingsPanel {
       const has = key === 'mosque' ? s.mosque.hasImage : s.mosque.hasLogo;
       if (has) void blobUrl(key).then((u) => { if (u) box.style.backgroundImage = `url("${u}")`; });
       const input = h('input', {
-        type: 'file', accept: 'image/*', class: 'file',
+        type: 'file', accept: 'image/png,image/jpeg,image/webp', class: 'file',
         onchange: async (e: Event) => {
           const f = (e.target as HTMLInputElement).files?.[0];
           if (!f) return;
+          if (!['image/png', 'image/jpeg', 'image/webp'].includes(f.type) || f.size > 8 * 1024 * 1024) {
+            alert(L('Image invalide (8 Mo max.)', 'Unsupported image or file exceeds 8 MB', 'صورة غير مدعومة أو أكبر من 8 ميغابايت'));
+            return;
+          }
           const blob = key === 'mosque' ? await resizeImage(f, 1920, 1080) : await resizeImage(f, 512, 512, 'image/png');
           await blobs.set(key, blob);
           settings.set((x) => {
@@ -460,10 +464,15 @@ export class SettingsPanel {
       ...ATHANS,
     ];
     const upload = h('input', {
-      type: 'file', accept: 'audio/*', class: 'file',
+      type: 'file', accept: 'audio/mpeg,.mp3', class: 'file',
       onchange: async (e: Event) => {
         const f = (e.target as HTMLInputElement).files?.[0];
         if (!f) return;
+        if (!['audio/mpeg', 'audio/mp3', 'audio/x-mpeg', ''].includes(f.type) ||
+            !/\\.mp3$/i.test(f.name) || f.size > 10 * 1024 * 1024) {
+          alert(L('MP3 invalide (10 Mo max.)', 'Only MP3 up to 10 MB is accepted', 'يسمح بملفات MP3 حتى 10 ميغابايت'));
+          return;
+        }
         const id = `custom:${Date.now()}`;
         await blobs.set(id, f);
         settings.set((x) => { x.athan.custom.push({ id, name: f.name.replace(/\.[^.]+$/, '') }); x.athan.sound = id; });
@@ -619,7 +628,17 @@ export class SettingsPanel {
       onchange: async (e: Event) => {
         const f = (e.target as HTMLInputElement).files?.[0];
         if (!f) return;
-        try { settings.replace(JSON.parse(await f.text())); invalidate(); this.render(); }
+        if (f.size > 512 * 1024) {
+          alert(L('Fichier trop volumineux', 'Backup exceeds 512 KB', 'النسخة الاحتياطية أكبر من 512 كيلوبايت'));
+          return;
+        }
+        try {
+          const raw: unknown = JSON.parse(await f.text());
+          if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Invalid backup structure');
+          settings.replace(raw);
+          invalidate();
+          this.render();
+        }
         catch { alert(L('Fichier invalide', 'Invalid file', 'ملف غير صالح')); }
       },
     });
