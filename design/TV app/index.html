@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark"><title>Salahaldin • TV app</title>
+<style>
+:root{--bg:#071a17;--panel:#12332e;--active:#1c5849;--ivory:#f6f0db;--muted:#b8c9bd;--gold:#d9b77a;--line:#33554d;--round:20px}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#05120f;color:var(--ivory);font-family:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.layout{width:100%;max-width:1920px;aspect-ratio:16/9;min-height:730px;margin:auto;position:relative;overflow:hidden;background:radial-gradient(ellipse 100% 80% at 48% -35%,#2c6854 0%,transparent 74%),linear-gradient(150deg,#091e19 8%,#061711 100%);box-shadow:0 0 100px #0006}
+.layout:before{content:"";position:absolute;inset:0;opacity:.08;pointer-events:none;background-image:repeating-linear-gradient(45deg,transparent 0 48px,#bbab70 49px,transparent 50px 100px),repeating-linear-gradient(-45deg,transparent 0 48px,#bbab70 49px,transparent 50px 100px);mask-image:linear-gradient(to bottom,#000,transparent 92%)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:32px 54px 24px;border-bottom:1px solid #49665765;position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:16px}.brandmark{width:66px;height:66px;display:grid;place-items:center;border:2px solid var(--gold);border-radius:20px;box-shadow:inset 0 0 0 4px #d9b77a22;color:var(--gold);font-size:39px}.brand h1{margin:0;color:var(--ivory);font-family:Georgia,"Times New Roman",serif;font-size:34px;line-height:1.2}.brand small{display:block;color:var(--gold);font-size:15px;letter-spacing:.12em;margin-top:4px}
+.location{text-align:center}.location h2{margin:0;color:var(--ivory);font-size:27px;font-weight:600}.location p{margin:4px 0 0;color:var(--muted);font-size:17px}
+.time{text-align:end}.time b{display:block;color:var(--ivory);font-size:45px;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1.2}.time span{font-size:16px;color:var(--gold)}
+.content{display:grid;grid-template-columns:1.4fr .8fr;gap:34px;padding:34px 54px 20px;position:relative;z-index:1}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.section-title h3{margin:0;font-size:26px;font-weight:600}.section-title small{color:var(--muted);font-size:15px}
+.prayers{display:grid;gap:9px}.prayer{display:grid;grid-template-columns:1.55fr 1fr 1fr;align-items:center;gap:12px;padding:17px 24px;background:#12332ed9;border:1px solid #35544875;border-radius:17px;min-height:76px}
+.prayer.current{background:linear-gradient(120deg,#1d6552,#164537);border:1px solid #d9b77a9e;box-shadow:0 7px 22px #0002}.prayer .label{font-size:25px;font-weight:600}.prayer .timeval{font-size:27px;font-weight:600;font-variant-numeric:tabular-nums}.prayer .iqama{color:var(--gold);font-size:27px;font-variant-numeric:tabular-nums}.prayer .caption{font-size:13px;color:var(--muted);display:block;font-weight:400}
+.aside{display:flex;flex-direction:column;gap:20px}.next{background:linear-gradient(170deg,#194b3e,#0e2e28);border:1px solid #d9b77a55;border-radius:24px;padding:30px;text-align:center;box-shadow:inset 0 1px #d9b77a44}
+.next .eyebrow{color:var(--gold);font-size:20px}.next h3{font-size:42px;margin:13px 0 6px}.next .count{font-size:74px;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ivory);letter-spacing:.025em}.next p{margin:12px 0 0;color:var(--muted);font-size:18px}
+.verse{background:#12332ed9;border:1px solid #35544875;border-radius:22px;padding:24px 28px;flex:1}.verse .head{color:var(--gold);font-size:18px;margin-bottom:16px}.verse .arabic{font-family:Georgia,"Times New Roman",serif;text-align:center;font-size:34px;line-height:1.9;color:var(--ivory);margin:0}.verse .desc{text-align:center;color:var(--muted);font-size:15px}
+.footer{height:70px;margin:0 54px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-top:1px solid var(--line);position:relative;z-index:1;color:var(--muted);font-size:17px}.footer strong{color:var(--gold);font-weight:600}
+.ornament{position:absolute;right:-180px;bottom:-310px;width:650px;height:650px;border:2px solid #d9b77a15;border-radius:50%;pointer-events:none}.ornament:after{content:"";position:absolute;inset:50px;border:1px dashed #d9b77a22;border-radius:50%}
+.watermark{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:12px;color:#89a59a;opacity:.75}
+.demo-controls{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:9;background:#f6f0db;border:1px solid #afad9b;border-radius:16px;padding:8px;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;box-shadow:0 10px 50px #0008;max-width:98vw}
+.demo-controls button{border:0;background:transparent;color:#153b31;border-radius:9px;padding:8px 13px;font-size:14px}.demo-controls button[aria-pressed=true]{background:#1b4d3e;color:white}
+.overlay{display:none;position:absolute;z-index:5;inset:0;background:radial-gradient(circle at 50% 30%,#1b614b,#061713 70%);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px}.overlay.active{display:flex}.overlay .floral{font-size:70px;color:var(--gold)}.overlay .mode{font-size:32px;color:var(--gold);letter-spacing:.08em;margin:24px 0 5px}.overlay .prayername{font-size:86px;margin:16px 0;color:var(--ivory)}.overlay .big{font-size:138px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;margin:20px 0 25px}.overlay .sub{font-size:27px;color:var(--muted);max-width:1050px;line-height:1.8}
+[dir=ltr] .location{text-align:center}[dir=ltr] .time{text-align:right}[dir=ltr] .overlay .sub{max-width:1000px}
+@media(max-width:1150px){.layout{min-height:730px}.content{gap:18px;padding:24px}.top{padding:20px 24px}.footer{margin:0 24px}.brand h1{font-size:24px}.brandmark{width:53px;height:53px}.prayer{padding:14px 16px}.prayer .label{font-size:21px}.prayer .timeval,.prayer .iqama{font-size:22px}.next .count{font-size:52px}}
+@media(max-width:700px),(orientation:portrait){.layout{aspect-ratio:auto;min-height:100svh;padding-bottom:64px}.top{display:grid;grid-template-columns:1fr 1fr;padding:22px 22px 16px}.brand{grid-column:1/-1}.location{text-align:start}.time b{font-size:30px}.content{display:flex;flex-direction:column-reverse;padding:20px;gap:20px}.aside{gap:12px}.next{padding:20px}.next .count{font-size:56px}.next h3{font-size:28px;margin:5px}.verse{display:none}.prayer{min-height:64px}.prayer .label{font-size:19px}.prayer .timeval,.prayer .iqama{font-size:20px}.footer{height:auto;min-height:76px;flex-wrap:wrap;margin:0 20px;font-size:13px}.overlay .prayername{font-size:46px}.overlay .big{font-size:83px}.overlay .sub{font-size:20px}.demo-controls{position:sticky;bottom:0;transform:none;margin:8px auto;border-radius:9px}}
+</style>
+</head>
+<body>
+<main class="layout" id="screen">
+<div class="ornament"></div>
+<header class="top">
+<div class="brand"><div class="brandmark" aria-hidden="true">۞</div><div><h1>Salahaldin</h1><small id="brandSub">صلاح الدين · TV APP</small></div></div>
+<div class="location"><h2 id="city">مسجد النور — فريدريشيا</h2><p id="calendarDate">نموذج تصميم • جدول افتراضي</p></div>
+<div class="time"><b>12:08</b><span id="timeLabel">الجمعة • 20 نوفمبر</span></div>
+</header>
+<div class="content">
+<section><div class="section-title"><h3 id="scheduleTitle">مواقيت الصلاة</h3><small id="headings">الأذان &nbsp; | &nbsp; الإقامة</small></div><div class="prayers" id="prayerRows"></div></section>
+<div class="aside"><div class="next"><span class="eyebrow" id="nextTitle">الصلاة القادمة</span><h3 id="nextName">الظهر</h3><div class="count">00:05:12</div><p id="nextCaption">باقٍ على الأذان</p></div><article class="verse"><div class="head" id="verseTitle">ذِكْر اليوم</div><p class="arabic">سُبْحَانَ اللَّهِ وَبِحَمْدِهِ</p><p class="desc" id="verseDesc">أذكار تظهر تلقائيًا على الشاشة</p></article></div>
+</div>
+<footer class="footer"><span id="footerLeft">يرجى وضع الهواتف في الوضع الصامت</span><strong id="footerCenter">Salahaldin • صلاة وإقامة</strong><span id="footerRight">مصدر التوقيت: نموذج عرض فقط</span></footer>
+<div class="watermark" id="demoLabel">DESIGN PREVIEW — NOT REAL PRAYER TIMES</div>
+<div class="overlay" id="overlay"><div class="floral" aria-hidden="true">۞</div><div class="mode" id="modeLabel"></div><h2 class="prayername" id="modePrayer"></h2><div class="big" id="modeBig"></div><div class="sub" id="modeSub"></div></div>
+</main>
+<nav class="demo-controls" aria-label="TV design prototype controls">
+<button type="button" data-lang="ar" aria-pressed="true">العربية</button><button type="button" data-lang="da" aria-pressed="false">Dansk</button><button type="button" data-lang="en" aria-pressed="false">English</button><button type="button" data-lang="tr" aria-pressed="false">Türkçe</button>
+<button type="button" data-mode="dashboard" aria-pressed="true">Schedule</button><button type="button" data-mode="adhan" aria-pressed="false">Adhan</button><button type="button" data-mode="iqamah" aria-pressed="false">Iqamah</button><button type="button" data-mode="prayer" aria-pressed="false">Prayer</button><button type="button" data-mode="adhkar" aria-pressed="false">Adhkar</button>
+</nav>
+<script>
+const langs={
+ar:{dir:'rtl',city:'مسجد النور — فريدريشيا',date:'نموذج تصميم • جدول افتراضي',time:'الجمعة • 20 نوفمبر',schedule:'مواقيت الصلاة',columns:'الأذان  |  الإقامة',next:'الصلاة القادمة',prayers:['الفجر','الشروق','الظهر','العصر','المغرب','العشاء'],iqamah:'الإقامة',adhan:'الأذان',caption:'باقٍ على الأذان',dhikr:'ذِكْر اليوم',desc:'أذكار تظهر تلقائيًا على الشاشة',footer:'يرجى وضع الهواتف في الوضع الصامت',sample:'مصدر التوقيت: نموذج عرض فقط',state:['','حان الآن وقت الصلاة','اقتربت الإقامة','الصلاة قائمة','أذكار بعد الصلاة'],msg:['','تهيؤوا للصلاة','الرجاء إغلاق الهواتف وإكمال الصفوف','يرجى المحافظة على السكينة','سبحان الله وبحمده']},
+da:{dir:'ltr',city:'An-Nour Moské · Fredericia',date:'Designudkast • Eksempeltider',time:'Fredag · 20. november',schedule:'Bedetider',columns:'Adhan  |  Iqama',next:'Næste bøn',prayers:['Fajr','Solopgang','Dhuhr','Asr','Maghrib','Isha'],iqamah:'Iqama',adhan:'Adhan',caption:'Til adhan',dhikr:'Dagens dhikr',desc:'Dhikr vises automatisk på skærmen',footer:'Sæt venligst telefonen på lydløs',sample:'Tiderne er kun et designeksempel',state:['','Det er tid til bøn','Iqama nærmer sig','Bønnen er i gang','Dhikr efter bønnen'],msg:['','Gør jer klar til bøn','Sluk telefonerne og ret rækkerne op','Vis venligst hensyn og ro','Subhan Allah wa bihamdihi']},
+en:{dir:'ltr',city:'An-Nour Mosque · Fredericia',date:'Design preview • Sample timetable',time:'Friday · November 20',schedule:'Prayer times',columns:'Adhan  |  Iqamah',next:'Next prayer',prayers:['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'],iqamah:'Iqamah',adhan:'Adhan',caption:'Until adhan',dhikr:'Daily dhikr',desc:'Remembrance displayed automatically',footer:'Please silence your mobile phones',sample:'Sample times for design only',state:['','It is time for prayer','Iqamah is approaching','Prayer in progress','Remembrance after prayer'],msg:['','Prepare for prayer','Please silence phones and straighten rows','Please maintain silence','Subhan Allah wa bihamdihi']},
+tr:{dir:'ltr',city:'En-Nur Camii · Fredericia',date:'Tasarım önizlemesi • Örnek saatler',time:'Cuma · 20 Kasım',schedule:'Namaz vakitleri',columns:'Ezan  |  Kamet',next:'Sonraki namaz',prayers:['Sabah','Güneş','Öğle','İkindi','Akşam','Yatsı'],iqamah:'Kamet',adhan:'Ezan',caption:'Ezana kalan',dhikr:'Günün zikri',desc:'Zikirler ekranda otomatik gösterilir',footer:'Lütfen telefonlarınızı sessize alın',sample:'Saatler yalnızca tasarım örneğidir',state:['','Namaz vakti geldi','Kamet yaklaşıyor','Namaz kılınıyor','Namaz sonrası zikir'],msg:['','Namaza hazırlanın','Telefonları kapatın ve safları düzeltin','Lütfen sessiz olun','Sübhanallahi ve bihamdihi']}
+};
+const adhan=['05:42','07:28','12:13','14:39','16:58','18:31'];const iqama=['06:00','—','12:25','14:55','17:06','18:45'];
+let lang='ar',mode='dashboard';
+function render(){const t=langs[lang];document.documentElement.lang=lang;document.documentElement.dir=t.dir;
+const set=(id,value)=>document.getElementById(id).textContent=value;
+set('city',t.city);set('calendarDate',t.date);set('timeLabel',t.time);set('scheduleTitle',t.schedule);set('headings',t.columns);set('nextTitle',t.next);set('nextName',t.prayers[2]);set('nextCaption',t.caption);set('verseTitle',t.dhikr);set('verseDesc',t.desc);set('footerLeft',t.footer);set('footerRight',t.sample);
+document.getElementById('prayerRows').innerHTML=t.prayers.map((name,i)=>'<div class="prayer '+(i===2?'current':'')+'"><span class="label">'+name+'</span><span class="timeval">'+adhan[i]+'<span class="caption">'+t.adhan+'</span></span><span class="iqama">'+iqama[i]+'<span class="caption">'+t.iqamah+'</span></span></div>').join('');
+const overlay=document.getElementById('overlay');overlay.classList.toggle('active',mode!=='dashboard');
+set('modeLabel',t.state[['dashboard','adhan','iqamah','prayer','adhkar'].indexOf(mode)]);set('modePrayer',t.prayers[2]);
+set('modeBig',mode==='iqamah'?'03:45':mode==='adhan'?'12:13':mode==='adhkar'?'۞':'');set('modeSub',t.msg[['dashboard','adhan','iqamah','prayer','adhkar'].indexOf(mode)]);
+document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
+document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
+}
+document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.lang;render()}));
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;render()}));render();
+</script>
+</body></html>
