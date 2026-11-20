@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /tv
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels: [dependencies, security]
+  - package-ecosystem: npm
+    directory: /server
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels: [dependencies, security]
+  - package-ecosystem: composer
+    directory: /server
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels: [dependencies, security]
+  - package-ecosystem: pub
+    directory: /mobile
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels: [dependencies, security]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    labels: [dependencies, security]
