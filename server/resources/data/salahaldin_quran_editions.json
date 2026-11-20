@@ -182,5 +182,31 @@
       "sourceUrl": "https://quranenc.com/en/browse/kurmanji_ismail",
       "availability": "dialect-and-script-review-required"
     }
+  ],
+  "additionalSources": [
+    {
+      "language": "kmr",
+      "dialect": "Badînî / Behdînî",
+      "title": "Translation Sanahi",
+      "repository": "https://github.com/0xdolan/kurdish_quran",
+      "path": "txt/translation_sanahi.txt",
+      "kind": "translation",
+      "availability": "source-identified-license-unverified",
+      "rights": "No license found in source repository. Do not redistribute text before explicit rights confirmation.",
+      "note": "Distinguish Badini from Sorani and from unverified generic Kurmanji editions."
+    },
+    {
+      "language": "ckb",
+      "dialect": "Soranî",
+      "title": "Asan, Puxta, Raman translations",
+      "repository": "https://github.com/0xdolan/kurdish_quran",
+      "paths": [
+        "txt/translation_asan.txt",
+        "txt/translation_puxta.txt",
+        "txt/translation_raman.txt"
+      ],
+      "availability": "source-identified-license-unverified",
+      "rights": "No license found; do not copy text until rights are established."
+    }
   ]
 }
