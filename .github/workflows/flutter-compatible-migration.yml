@@ -1,0 +1,55 @@
+name: Modern Flutter dependencies with native alarm migration guard
+on:
+  push:
+    branches: [upgrade/flutter-compatible-latest-lab]
+    paths: ['.github/workflows/flutter-compatible-migration.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  modernize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.8'
+          channel: stable
+          cache: true
+      - name: Resolve newest majors except alarm storage, geocoding and timezone incompatible APIs
+        working-directory: mobile
+        run: |
+          flutter pub upgrade --major-versions
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('pubspec.yaml')
+          data=p.read_text()
+          compatible={
+              'flutter_local_notifications':'17.2.4',
+              'geocoding':'^4.0.0',
+              'timezone':'^0.9.3'
+          }
+          for name,version in compatible.items():
+              data,n=re.subn(r'(?m)^(  '+re.escape(name)+r':)\s*[^\n]+$',lambda m:m.group(1)+' '+version,data,count=1)
+              if n!=1: raise RuntimeError('Missing pin: '+name)
+          p.write_text(data)
+          PY
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: Verify Android compile with QA preview config
+        working-directory: mobile
+        env:
+          ORG_GRADLE_PROJECT_salatimePreview: 'true'
+        run: flutter build apk --debug --no-pub
+      - name: Commit tested dependency updates
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mobile/pubspec.yaml mobile/pubspec.lock
+          if ! git diff --cached --quiet; then
+            git commit -m "Upgrade compatible Flutter dependencies while preserving notification alarm format"
+            git push origin HEAD:upgrade/flutter-compatible-latest-lab
+          fi
