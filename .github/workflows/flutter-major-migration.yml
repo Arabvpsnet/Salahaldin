@@ -1,0 +1,40 @@
+name: Flutter latest-major migration — complete regression and Android build
+on:
+  push:
+    branches: [upgrade/flutter-latest-lab]
+    paths: ['.github/workflows/flutter-major-migration.yml', 'mobile/pubspec.yaml', 'mobile/lib/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve latest available Dart and Flutter dependency majors
+        working-directory: mobile
+        run: |
+          flutter --version
+          flutter pub outdated || true
+          flutter pub upgrade --major-versions
+          flutter analyze
+          flutter test
+      - name: Verify Android debug build (fresh-install sandbox)
+        working-directory: mobile
+        env:
+          ORG_GRADLE_PROJECT_salatimePreview: 'true'
+        run: flutter build apk --debug --no-pub
+      - name: Commit tested Flutter manifest and lockfile
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mobile/pubspec.yaml mobile/pubspec.lock
+          if ! git diff --cached --quiet; then
+            git commit -m "Upgrade Flutter packages to latest major versions after analysis tests and Android build"
+            git push origin HEAD:upgrade/flutter-latest-lab
+          fi
