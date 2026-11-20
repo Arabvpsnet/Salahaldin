@@ -133,19 +133,62 @@ export function defaults(): Settings {
   };
 }
 
-/** Deep-merge stored values onto defaults so new settings appear after an update. */
-function merge<T>(base: T, over: unknown): T {
+/** Validate user-imported and remotely synchronized timetable data before persistence. */
+const validClock = (value: unknown): value is string =>
+  typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+
+function validCalendarDay(value: string): boolean {
+  if (/^\d{2}-\d{2}$/.test(value)) {
+    const [month, day] = value.split('-').map(Number);
+    return month >= 1 && month <= 12 && day >= 1 && day <= 31;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day;
+}
+
+function safeTimetable(value: unknown): Settings['timetable'] {
+  const days: Settings['timetable'] = Object.create(null);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return days;
+  for (const [day, times] of Object.entries(value).slice(0, 800)) {
+    if (!validCalendarDay(day) || !Array.isArray(times) || times.length !== 6 ||
+        !times.every(validClock)) continue;
+    days[day] = [...times];
+  }
+  return days;
+}
+
+function safeDailyIqama(value: unknown): Settings['dailyIqama'] {
+  const days: Settings['dailyIqama'] = Object.create(null);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return days;
+  for (const [day, times] of Object.entries(value).slice(0, 800)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !validCalendarDay(day) ||
+        !times || typeof times !== 'object' || Array.isArray(times)) continue;
+    const row: Partial<Record<SalahKey, string>> = {};
+    for (const prayer of SALAWAT) {
+      const time = (times as Record<string, unknown>)[prayer];
+      if (validClock(time)) row[prayer] = time;
+    }
+    if (Object.keys(row).length) days[day] = row;
+  }
+  return days;
+}
+
+/** Deep-merge recognized fields only, preserving validated variable-date calendars. */
+function merge<T>(base: T, over: unknown, key = ''): T {
+  if (key === 'timetable') return safeTimetable(over) as T;
+  if (key === 'dailyIqama') return safeDailyIqama(over) as T;
   if (Array.isArray(base)) return (Array.isArray(over) ? over : base) as T;
   if (base && typeof base === 'object') {
     const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
-    if (over && typeof over === 'object') {
-      for (const k of Object.keys(over as object)) {
-        // A imported backup/local storage must not inject arbitrary properties or prototypes.
-        if (k === '__proto__' || k === 'prototype' || k === 'constructor' ||
-            !Object.prototype.hasOwnProperty.call(base, k)) continue;
-        const bv = (base as Record<string, unknown>)[k];
-        const ov = (over as Record<string, unknown>)[k];
-        out[k] = merge(bv, ov);
+    if (over && typeof over === 'object' && !Array.isArray(over)) {
+      for (const field of Object.keys(over)) {
+        if (field === '__proto__' || field === 'prototype' || field === 'constructor' ||
+            !Object.prototype.hasOwnProperty.call(base, field)) continue;
+        const existing = (base as Record<string, unknown>)[field];
+        out[field] = merge(existing, (over as Record<string, unknown>)[field], field);
       }
     }
     return out as T;

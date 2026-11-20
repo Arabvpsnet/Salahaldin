@@ -1,7 +1,7 @@
 name: Security checks — dependency audits & credential guard
 on:
   push:
-    branches: [security/tv-app-hardening]
+    branches: [security/tv-app-hardening, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab]
   pull_request:
     paths:
       - 'mobile/**'
@@ -19,8 +19,8 @@ jobs:
   tv-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - name: Audit installed TV packages from lockfile

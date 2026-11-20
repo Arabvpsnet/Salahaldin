@@ -1,16 +1,18 @@
 name: Salahaldin integration checks
 on:
   push:
-    branches: [integration/salatime-sakina-multilingual]
+    branches: [integration/salatime-sakina-multilingual, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab]
     paths:
       - 'tv/**'
       - 'server/**'
+      - 'mobile/**'
       - 'shared/**'
       - '.github/workflows/validate-integration.yml'
   pull_request:
     paths:
       - 'tv/**'
       - 'server/**'
+      - 'mobile/**'
       - 'shared/**'
 concurrency:
   group: salahaldin-checks-${{ github.ref }}
@@ -24,8 +26,8 @@ jobs:
       run:
         working-directory: tv
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
