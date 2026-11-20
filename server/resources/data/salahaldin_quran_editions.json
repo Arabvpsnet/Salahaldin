@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "sourcePolicy": "https://quranenc.com/en/home/api/",
+  "description": "Only editions with proven source keys are indexed. Source availability is distinct from installed, scholarly-verified tafsir or redistribution authorization.",
+  "requestedLanguages": [
+    {
+      "code": "ar",
+      "name": "العربية",
+      "direction": "rtl",
+      "script": "Arab",
+      "readerUi": "upstream",
+      "quranMeaning": "bundled",
+      "tafsir": "bundled"
+    },
+    {
+      "code": "tr",
+      "name": "Türkçe",
+      "direction": "ltr",
+      "script": "Latn",
+      "readerUi": "upstream",
+      "quranMeaning": "bundled",
+      "tafsir": "remote-candidate"
+    },
+    {
+      "code": "bs",
+      "name": "Bosanski",
+      "direction": "ltr",
+      "script": "Latn",
+      "readerUi": "pending",
+      "quranMeaning": "source-identified",
+      "tafsir": "source-identified"
+    },
+    {
+      "code": "da",
+      "name": "Dansk",
+      "direction": "ltr",
+      "script": "Latn",
+      "readerUi": "pending",
+      "quranMeaning": "licence-review",
+      "tafsir": "not-verified"
+    },
+    {
+      "code": "de",
+      "name": "Deutsch",
+      "direction": "ltr",
+      "script": "Latn",
+      "readerUi": "pending",
+      "quranMeaning": "source-identified",
+      "tafsir": "not-verified"
+    },
+    {
+      "code": "en",
+      "name": "English",
+      "direction": "ltr",
+      "script": "Latn",
+      "readerUi": "upstream",
+      "quranMeaning": "bundled",
+      "tafsir": "not-verified"
+    },
+    {
+      "code": "arab-Latn",
+      "name": "Arabic transliteration (Latin script)",
+      "direction": "ltr",
+      "script": "Latn",
+      "readerUi": "pending",
+      "quranMeaning": "not-applicable",
+      "tafsir": "not-applicable"
+    },
+    {
+      "code": "ckb",
+      "name": "کوردیی سۆرانی",
+      "direction": "rtl",
+      "script": "Arab",
+      "readerUi": "pending",
+      "quranMeaning": "source-identified",
+      "tafsir": "source-identified"
+    },
+    {
+      "code": "kmr",
+      "name": "Badînî / Kurmancî",
+      "direction": "rtl",
+      "script": "Arab",
+      "readerUi": "pending",
+      "quranMeaning": "dialect-verification-required",
+      "tafsir": "not-verified"
+    }
+  ],
+  "editions": [
+    {
+      "id": "arabic_moyassar",
+      "lang": "ar",
+      "kind": "tafsir",
+      "publisher": "QuranEnc",
+      "sourceUrl": "https://quranenc.com/en/browse/arabic_moyassar",
+      "availability": "bundled-upstream"
+    },
+    {
+      "id": "arabic_mokhtasar",
+      "lang": "ar",
+      "kind": "tafsir",
+      "publisher": "Tafsir Center",
+      "sourceUrl": "https://quranenc.com/en/browse/arabic_mokhtasar",
+      "availability": "remote-source"
+    },
+    {
+      "id": "english_rwwad",
+      "lang": "en",
+      "kind": "translation",
+      "publisher": "Rowwad Translation Center",
+      "sourceUrl": "https://quranenc.com/en/browse/english_rwwad",
+      "availability": "bundled-upstream"
+    },
+    {
+      "id": "turkish_rwwad",
+      "lang": "tr",
+      "kind": "translation",
+      "publisher": "Rowwad Translation Center",
+      "sourceUrl": "https://quranenc.com/en/browse/turkish_rwwad",
+      "availability": "bundled-upstream"
+    },
+    {
+      "id": "turkish_mokhtasar",
+      "lang": "tr",
+      "kind": "translated-tafsir",
+      "publisher": "Tafsir Center",
+      "sourceUrl": "https://quranenc.com/en/browse/turkish_mokhtasar",
+      "availability": "remote-source"
+    },
+    {
+      "id": "bosnian_korkut",
+      "lang": "bs",
+      "kind": "translation",
+      "publisher": "QuranEnc / Besim Korkut",
+      "sourceUrl": "https://quranenc.com/en/browse/bosnian_korkut",
+      "availability": "remote-source"
+    },
+    {
+      "id": "bosnian_mokhtasar",
+      "lang": "bs",
+      "kind": "translated-tafsir",
+      "publisher": "Tafsir Center",
+      "sourceUrl": "https://quranenc.com/en/browse/bosnian_mokhtasar",
+      "availability": "remote-source"
+    },
+    {
+      "id": "german_rwwad",
+      "lang": "de",
+      "kind": "translation",
+      "publisher": "Rowwad Translation Center",
+      "sourceUrl": "https://quranenc.com/en/browse/german_rwwad",
+      "availability": "remote-source"
+    },
+    {
+      "id": "german_bubenheim",
+      "lang": "de",
+      "kind": "translation",
+      "publisher": "Frank Bubenheim / Nadim Elias",
+      "sourceUrl": "https://quranenc.com/en/browse/german_bubenheim",
+      "availability": "remote-source"
+    },
+    {
+      "id": "kurdish_bamoki",
+      "lang": "ckb",
+      "kind": "translation",
+      "publisher": "Muhammad Salih Bamoki",
+      "sourceUrl": "https://quranenc.com/en/browse/kurdish_bamoki",
+      "availability": "remote-source"
+    },
+    {
+      "id": "kurdish_mokhtasar",
+      "lang": "ckb",
+      "kind": "translated-tafsir",
+      "publisher": "Tafsir Center",
+      "sourceUrl": "https://quranenc.com/ar/browse/kurdish_mokhtasar",
+      "availability": "remote-source"
+    },
+    {
+      "id": "kurmanji_ismail",
+      "lang": "kmr",
+      "kind": "translation",
+      "publisher": "Ismail Sageri",
+      "sourceUrl": "https://quranenc.com/en/browse/kurmanji_ismail",
+      "availability": "dialect-and-script-review-required"
+    }
+  ]
+}

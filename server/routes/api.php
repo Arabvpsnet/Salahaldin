@@ -120,3 +120,15 @@ Route::get('salahaldin/v1/schedules/{mosque}', function (string $mosque) {
         'Cache-Control' => 'public, max-age=30',
     ]);
 })->where('mosque', '[a-z0-9-]+');
+
+
+// Salahaldin: versioned, attributed catalog of QuranEnc edition metadata.
+// The endpoint returns metadata, not copyrighted verse bodies or artificial translations.
+Route::get('salahaldin/v1/quran/editions', function () {
+    $path = resource_path('data/salahaldin_quran_editions.json');
+    abort_unless(is_file($path), 404);
+    return response()->file($path, [
+        'Content-Type' => 'application/json; charset=utf-8',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+});
