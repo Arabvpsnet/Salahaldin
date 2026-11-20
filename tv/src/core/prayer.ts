@@ -188,6 +188,15 @@ export async function warmApi(s: Settings): Promise<void> {
 }
 
 export function iqamaTime(s: Settings, key: SalahKey, adhan: Date, date: YMD): Date {
+  // Mosque-approved per-day iqamah overrides fixed and relative rules, including DST transitions.
+  const dailyTime = s.dailyIqama?.[ymdKey(date)]?.[key];
+  if (dailyTime) {
+    const parsed = parseHM(dailyTime);
+    if (parsed !== null) {
+      const fixed = fromZoned(date.y, date.m, date.d, Math.floor(parsed / 60), parsed % 60, s.location.timezone);
+      if (fixed.getTime() >= adhan.getTime()) return fixed;
+    }
+  }
   const r = s.iqama[key];
   if (r.mode === 'fixed') {
     const v = parseHM(r.time);

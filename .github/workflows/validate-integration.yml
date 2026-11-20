@@ -12,8 +12,7 @@ on:
       - 'tv/**'
       - 'server/**'
       - 'shared/**'
-permissions:
-  contents: read
+concurrency:\n  group: salahaldin-checks-\${{ github.ref }}\n  cancel-in-progress: true\npermissions:\n  contents: read
 jobs:
   tv:
     runs-on: ubuntu-latest
@@ -37,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: php -l server/routes/api.php
       - run: php -l server/app/Http/Controllers/Quran/PrayerTime/PrayerTimeImportController.php
-      - run: python3 -m json.tool shared/contracts/mosque-schedule.schema.json >/dev/null
+      - run: python3 -m json.tool shared/contracts/mosque-schedule.schema.json >/dev/null\n      - run: python3 -m unittest discover -s tools/prayer_schedule -p 'test_*.py'
       - run: test -f mobile/pubspec.yaml && test -f tv/LICENSE && test -f server/LICENSE
 
   mobile:

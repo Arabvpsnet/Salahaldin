@@ -77,7 +77,7 @@ export interface Settings {
   };
   eid: { date: string; time: string };
   ramadan: { auto: boolean; force: boolean; imsakOffset: number };
-  timetable: Record<string, string[]>; // "MM-DD" or "YYYY-MM-DD" → [fajr, sunrise, dhuhr, asr, maghrib, isha]
+  dailyIqama: Record<string, Partial<Record<SalahKey, string>>>; // YYYY-MM-DD -> per-prayer HH:MM (fixed, highest priority)\n  timetable: Record<string, string[]>; // "MM-DD" or "YYYY-MM-DD" → [fajr, sunrise, dhuhr, asr, maghrib, isha]
   pin: string;
 }
 
@@ -126,8 +126,7 @@ export function defaults(): Settings {
     },
     eid: { date: '', time: '' },
     ramadan: { auto: true, force: false, imsakOffset: 10 },
-    timetable: {},
-    pin: '',
+    timetable: {},\n    dailyIqama: {},\n    pin: '',
   };
 }
 

@@ -3,7 +3,7 @@ import { invalidate } from './schedule';
 
 type RemoteCalendar = {
   schemaVersion: 1; mosqueId: string; timezone: string; city: string;
-  timetable: Record<string, string[]>;
+  timetable: Record<string, string[]>;\n  dailyIqama?: Record<string, Partial<Record<SalahKey, string>>>;
   iqama?: Partial<Record<SalahKey, {mode:'fixed' | 'offset'; time:string; offset:number}>>;
 };
 const api = import.meta.env.VITE_SALAHALDIN_API_BASE as string | undefined;
@@ -20,11 +20,17 @@ export async function syncMosqueCalendar() {
         !/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(hours) || hours.length !== 6 || !hours.every(validTime))) {
     throw new Error('Invalid mosque calendar');
   }
+  if (calendar.dailyIqama && Object.entries(calendar.dailyIqama).some(([day, byPrayer]) =>
+      !/^\d{4}-\d{2}-\d{2}$/.test(day) || !byPrayer || typeof byPrayer !== 'object' ||
+      Object.entries(byPrayer).some(([prayer, time]) =>
+        !['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].includes(prayer) || !validTime(time)))) {
+    throw new Error('Invalid daily iqama schedule');
+  }
   settings.set(s => {
     s.location.timezone = calendar.timezone;
     s.location.city = calendar.city;
     s.calc.source = 'table';
-    s.timetable = calendar.timetable;
+    s.timetable = calendar.timetable;\n    s.dailyIqama = calendar.dailyIqama ?? {};
     for (const key of ['fajr','dhuhr','asr','maghrib','isha'] as SalahKey[]) {
       const rule=calendar.iqama?.[key];
       if (rule && ['fixed','offset'].includes(rule.mode) && validTime(rule.time) &&

@@ -170,6 +170,39 @@
           }
         }
       }
+    },
+    "dailyIqama": {
+      "type": "object",
+      "description": "Optional fixed, mosque-authorized iqama HH:MM by local civil date",
+      "patternProperties": {
+        "^\\d{4}-\\d{2}-\\d{2}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fajr": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "dhuhr": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "asr": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "maghrib": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "isha": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
