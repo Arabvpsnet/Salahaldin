@@ -66,7 +66,7 @@ class SalahaldinQuranCatalog {
       throw ArgumentError.value(apiBase, 'apiBase', 'Invalid API base');
     }
     final base = apiBase.path.endsWith('/')
-        ? apiBase : apiBase.replace(path: apiBase.path + '/');
+        ? apiBase : apiBase.replace(path: '${apiBase.path}/');
     final url = base.resolve('api/salahaldin/v1/quran/editions');
     final request = http.Request('GET', url)..followRedirects = false;
     final activeClient = client ?? http.Client();
@@ -74,7 +74,7 @@ class SalahaldinQuranCatalog {
       final response = await activeClient.send(request)
           .timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) {
-        throw StateError('Quran edition catalog HTTP ' + response.statusCode.toString());
+        throw StateError('Quran edition catalog HTTP ${response.statusCode}');
       }
       final bytes = <int>[];
       await for (final chunk in response.stream.timeout(const Duration(seconds: 15))) {
