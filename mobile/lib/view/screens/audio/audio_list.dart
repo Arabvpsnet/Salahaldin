@@ -35,6 +35,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   QuranChapterCatalog? _chapterCatalog;
+  final Set<int> _downloadingSurahs = <int>{};
 
   @override
   void initState() {
@@ -164,6 +165,63 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
             style: robotoMedium.copyWith(
               color: Theme.of(context).disabledColor,
             ),
+          ),
+          trailing: Builder(
+            builder: (context) {
+              final chapter = mediaItem.extras?['chapterId'] as int?;
+              if (chapter == null) return const SizedBox.shrink();
+              return IconButton(
+                tooltip: switch (Localizations.localeOf(context).languageCode) {
+                  'da' => 'Download recitation til offline brug',
+                  'tr' => 'Çevrimdışı dinlemek için indir',
+                  'en' => 'Download for offline listening',
+                  _ => 'تحميل التلاوة للاستماع دون إنترنت',
+                },
+                icon: _downloadingSurahs.contains(chapter)
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(mediaItem.id.startsWith('file:')
+                        ? Icons.offline_pin_outlined
+                        : Icons.download_for_offline_outlined),
+                onPressed: _downloadingSurahs.contains(chapter)
+                    ? null
+                    : () async {
+                        setState(() => _downloadingSurahs.add(chapter));
+                        try {
+                          await _controller.downloadSurahForOffline(
+                            chapter, widget.reciterId.toString());
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                Localizations.localeOf(context).languageCode == 'ar'
+                                    ? 'حُفظت التلاوة للاستماع دون إنترنت'
+                                    : 'Recitation downloaded for offline playback',
+                              ),
+                            ),
+                          );
+                        } catch (_) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                Localizations.localeOf(context).languageCode == 'ar'
+                                    ? 'تعذر تحميل التلاوة'
+                                    : 'Recitation download unavailable',
+                              ),
+                            ),
+                          );
+                        } finally {
+                          if (mounted) {
+                            setState(() => _downloadingSurahs.remove(chapter));
+                          }
+                        }
+                      },
+              );
+            },
           ),
           onTap: () => _controller.playMediaItem(mediaItem),
         ),

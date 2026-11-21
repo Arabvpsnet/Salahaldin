@@ -14,6 +14,7 @@ import 'package:salatime/view/base/tabbar_button.dart';
 import 'package:salatime/view/screens/offline_quran/widgets/offline_arabic_quran.dart';
 import 'package:salatime/view/screens/offline_quran/widgets/offline_ayah_translation_screen.dart';
 import 'package:salatime/view/screens/quran/quran_settings_screen.dart';
+import 'package:salatime/view/screens/quran/licensed_quran_reader_tab.dart';
 import 'package:salatime/view/screens/quran_hifz/salahaldin_hifz_screen.dart';
 
 class OfflineSuraDetaileScreen extends StatefulWidget {
@@ -114,11 +115,12 @@ class _OfflineSuraDetaileScreenState extends State<OfflineSuraDetaileScreen> {
         ),
       ),
       body: DefaultTabController(
-        length: 2,
+        length: 3,
         initialIndex: initialTabIndex,
         child: Column(
           children: [
             TabBar(
+              isScrollable: true,
               dividerColor: Theme.of(context).scaffoldBackgroundColor,
               padding: const EdgeInsets.symmetric(
                 horizontal: Dimensions.PADDING_SIZE_DEFAULT,
@@ -134,6 +136,7 @@ class _OfflineSuraDetaileScreenState extends State<OfflineSuraDetaileScreen> {
               tabs: [
                 tabBarButton('arabic'.tr, context),
                 tabBarButton('ayah_and_translation'.tr, context),
+                Tab(text: LicensedQuranReaderTab.title(context)),
               ],
             ),
             Expanded(
@@ -155,6 +158,9 @@ class _OfflineSuraDetaileScreenState extends State<OfflineSuraDetaileScreen> {
                             highlightedWord: highlightedWord,
                           ),
                           const OfflineAyanTranslationWidget(),
+                          LicensedQuranReaderTab(
+                            surahNumber: int.tryParse(widget.surahNumber) ?? 1,
+                          ),
                         ],
                       ),
               ),
