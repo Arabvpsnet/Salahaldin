@@ -171,7 +171,12 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
               final chapter = mediaItem.extras?['chapterId'] as int?;
               if (chapter == null) return const SizedBox.shrink();
               return IconButton(
-                tooltip: 'Download recitation for offline playback',
+                tooltip: switch (Localizations.localeOf(context).languageCode) {
+                  'da' => 'Download recitation til offline brug',
+                  'tr' => 'Çevrimdışı dinlemek için indir',
+                  'en' => 'Download for offline listening',
+                  _ => 'تحميل التلاوة للاستماع دون إنترنت',
+                },
                 icon: _downloadingSurahs.contains(chapter)
                     ? const SizedBox(
                         width: 22,
@@ -191,14 +196,22 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Recitation saved for offline playback'),
+                              content: Text(
+                                Localizations.localeOf(context).languageCode == 'ar'
+                                    ? 'حُفظت التلاوة للاستماع دون إنترنت'
+                                    : 'Recitation downloaded for offline playback',
+                              ),
                             ),
                           );
                         } catch (_) {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Recitation download unavailable'),
+                              content: Text(
+                                Localizations.localeOf(context).languageCode == 'ar'
+                                    ? 'تعذر تحميل التلاوة'
+                                    : 'Recitation download unavailable',
+                              ),
                             ),
                           );
                         } finally {
