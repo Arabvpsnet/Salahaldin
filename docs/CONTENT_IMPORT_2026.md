@@ -1,4 +1,4 @@
-# Salahaldin Quran translation, tafsir and recitation import
+# Salahaldin Quran translation and tafsir import
 
 **Recorded:** 21 November 2026. The project owner stated that full content licences were obtained. This statement is recorded as owner-provided authorization; individual publisher obligations and source attribution remain in force. Copies of private permissions should be kept with release compliance records rather than published in this repository.
 
@@ -20,21 +20,15 @@ The original text, publisher names, footnotes, source URL, version number and ca
 - Additional Arabic/translated tafsir editions listed as `remote-source` in the shared catalogue have **not** been copied into the app; do not label those as installed.
 - Adding another tafsir requires distinct edition identifiers and edition-specific integrity checks, not replacing the Al-Muyassar text.
 
-## Audio status
-The mobile app already streams MP3Quran recitations from its provider API. This branch adds per-surah download buttons with secure HTTPS host validation, a 60 MiB per-file cap, MP3 header checks and offline playback from application support storage. **Recordings are downloaded to the user's device only when they choose to save a surah; the full audio catalogue is not bulk-committed to Git**, which would make repository and store bundles unreasonably large.
-
-The audio provider and each reciter/riwayah remain attributed by the existing reciter metadata. File hashes are filenames for cache identity, not proof that audio recordings were matched against a publisher-supplied master recording. Android/iOS playback and storage tests are release requirements.
-
 ## Reproducibility
 - Initial transfer workflow: `.github/workflows/import-licensed-quran.yml`.
 - Extended source importer: `mobile/tools/import_approved_quranenc_editions.py`.
 - Verify all pinned assets offline: `cd mobile && python3 tools/import_quranenc_translations.py --verify-only`.
-- Test bundled language selection, Quran text display and audio download/playback on phones and tablets before publication.
+- Test bundled language selection, and Quran text display on phones and tablets before publication.
 
 Sources:
 - https://quranenc.com/en/home/api/
 - https://quranenc.com/en/home/about/terms
-- https://www.mp3quran.net/ar/api
 
 ## Badini Sanahi independent edition
 

@@ -35,7 +35,6 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   QuranChapterCatalog? _chapterCatalog;
-  final Set<int> _downloading = <int>{};
 
   @override
   void initState() {
@@ -166,49 +165,10 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
               color: Theme.of(context).disabledColor,
             ),
           ),
-          trailing: mediaItem.id.startsWith('file:')
-              ? const Icon(Icons.offline_pin_rounded)
-              : IconButton(
-                  tooltip: 'حفظ التلاوة دون إنترنت',
-                  icon: _downloading.contains(
-                          mediaItem.extras?['chapterId'] as int?)
-                      ? const Icon(Icons.hourglass_top_rounded)
-                      : const Icon(Icons.download_for_offline_outlined),
-                  onPressed: _downloading.contains(
-                          mediaItem.extras?['chapterId'] as int?)
-                      ? null : () => _downloadSurah(mediaItem),
-                ),
           onTap: () => _controller.playMediaItem(mediaItem),
         ),
       ),
     );
-  }
-
-
-  Future<void> _downloadSurah(MediaItem media) async {
-    final remote = media.extras?['remotePath'] as String?;
-    final chapter = media.extras?['chapterId'] as int?;
-    if (remote == null || chapter == null) return;
-    setState(() => _downloading.add(chapter));
-    try {
-      await _controller.downloadSurahRecitation(remote);
-      if (!mounted) return;
-      // Reload the playlist only when idle to avoid interrupting the reciter.
-      if (!_controller.isPlaying.value) {
-        await _controller.loadAudioList(widget.reciterId.toString());
-      }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('حُفظت التلاوة على الجهاز للاستماع دون إنترنت'),
-      ));
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('تعذر تحميل التلاوة؛ تحقق من الاتصال ومساحة التخزين'),
-      ));
-    } finally {
-      if (mounted) setState(() => _downloading.remove(chapter));
-    }
   }
 
   Widget _buildBottomPlayerSection() {
