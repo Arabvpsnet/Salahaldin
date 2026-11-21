@@ -1,7 +1,11 @@
 name: Android native build — Salahaldin release candidate
 on:
   push:
-    branches: [integration/salahaldin-laravel13-quran-2026]
+    branches: [integration/salahaldin-laravel13-quran-2026, integration/salahaldin-offline-recitation-2026]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-release-candidate.yml'
+  pull_request:
     paths:
       - 'mobile/**'
       - '.github/workflows/android-release-candidate.yml'
