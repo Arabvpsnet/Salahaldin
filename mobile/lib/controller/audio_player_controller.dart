@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart' show LoopMode;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salatime/helper/quran_chapter_catalog.dart';
 import 'package:salatime/data/api/api_client.dart';
 import 'package:salatime/data/model/response/mp3quran_model.dart';
@@ -87,10 +88,34 @@ class AudioPlayerController extends GetxController {
       }
       final reciters = Mp3QuranResponse.fromJson(json).reciters!;
       _reciterCatalogs[language] = reciters;
+      // Preserve the public catalogue offline for recordings the user
+      // already downloaded. Public metadata contains no private activity.
+      if (response.body.length <= 1000000) {
+        try {
+          final preferences = await SharedPreferences.getInstance();
+          await preferences.setString('salahaldin.mp3quran.catalog.' + language,
+              response.body);
+        } catch (_) {
+          // Playback must not depend on writable preferences.
+        }
+      }
       return reciters;
     } catch (error) {
       if (kDebugMode) debugPrint('Reciter catalog unavailable: $error');
-      return null;
+      try {
+        final preferences = await SharedPreferences.getInstance();
+        final saved = preferences.getString(
+          'salahaldin.mp3quran.catalog.' + language);
+        if (saved == null || saved.length > 1000000) return null;
+        final document = jsonDecode(saved);
+        if (document is! Map<String, dynamic> ||
+            document['reciters'] is! List) return null;
+        final reciters = Mp3QuranResponse.fromJson(document).reciters!;
+        _reciterCatalogs[language] = reciters;
+        return reciters;
+      } catch (_) {
+        return null;
+      }
     }
   }
 
