@@ -270,7 +270,7 @@ class _SalahaldinHifzScreenState extends State<SalahaldinHifzScreen> {
                             )
                           else
                             Text(
-                              "${_label('المراجعة التالية', 'Next review', 'Næste gentagelse', 'Sonraki tekrar')}: ${_session!.plan.reviewDate(DateTime.now()).toIso8601String().split('T').first}",
+                              "${_label('المراجعة التالية', 'Next review', 'Næste gentagelse', 'Sonraki tekrar')}: ${_session!.plan.reviewDate(_session!.updatedAt.toLocal()).toIso8601String().split('T').first}",
                             ),
                         ],
                       ),
