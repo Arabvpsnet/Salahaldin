@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'dz.filinodz.sakina',
-  appName: 'Sakina',
+  appName: 'Salahaldin TV',
   webDir: 'dist',
   backgroundColor: '#04110d',
   android: {
