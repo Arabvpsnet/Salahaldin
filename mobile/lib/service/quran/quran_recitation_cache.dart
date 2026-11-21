@@ -82,7 +82,7 @@ class QuranRecitationCache {
       final validMp3 = signature.length >= 3 &&
           ((signature[0] == 0x49 && signature[1] == 0x44 &&
             signature[2] == 0x33) ||
-           (signature[0] == 0xff && signature[1] & 0xe0 == 0xe0));
+           (signature[0] == 0xff && (signature[1] & 0xe0) == 0xe0));
       if (!validMp3 || bytes < 1024) {
         throw const FormatException('Downloaded file is not an MP3');
       }

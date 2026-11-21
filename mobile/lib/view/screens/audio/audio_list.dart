@@ -35,6 +35,7 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   QuranChapterCatalog? _chapterCatalog;
+  final Set<int> _downloadingSurahs = <int>{};
 
   @override
   void initState() {
@@ -164,6 +165,50 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
             style: robotoMedium.copyWith(
               color: Theme.of(context).disabledColor,
             ),
+          ),
+          trailing: Builder(
+            builder: (context) {
+              final chapter = mediaItem.extras?['chapterId'] as int?;
+              if (chapter == null) return const SizedBox.shrink();
+              return IconButton(
+                tooltip: 'Download recitation for offline playback',
+                icon: _downloadingSurahs.contains(chapter)
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(mediaItem.id.startsWith('file:')
+                        ? Icons.offline_pin_outlined
+                        : Icons.download_for_offline_outlined),
+                onPressed: _downloadingSurahs.contains(chapter)
+                    ? null
+                    : () async {
+                        setState(() => _downloadingSurahs.add(chapter));
+                        try {
+                          await _controller.downloadSurahForOffline(
+                            chapter, widget.reciterId.toString());
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Recitation saved for offline playback'),
+                            ),
+                          );
+                        } catch (_) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Recitation download unavailable'),
+                            ),
+                          );
+                        } finally {
+                          if (mounted) {
+                            setState(() => _downloadingSurahs.remove(chapter));
+                          }
+                        }
+                      },
+              );
+            },
           ),
           onTap: () => _controller.playMediaItem(mediaItem),
         ),

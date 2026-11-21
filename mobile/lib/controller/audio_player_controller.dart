@@ -11,6 +11,7 @@ import 'package:salatime/data/api/api_client.dart';
 import 'package:salatime/data/model/response/mp3quran_model.dart';
 import 'package:salatime/data/model/response/reciters_model.dart';
 import 'package:salatime/helper/audio_handler.dart';
+import 'package:salatime/service/quran/quran_recitation_cache.dart';
 import 'package:salatime/helper/audio_service_helper.dart';
 import 'package:salatime/helper/debug_http_client.dart';
 import 'package:salatime/util/app_constants.dart';
@@ -26,6 +27,7 @@ class AudioPlayerController extends GetxController {
        _recitersHttpClient = recitersHttpClient ?? appHttpClient;
 
   final http.Client _recitersHttpClient;
+  final QuranRecitationCache _recitationCache = QuranRecitationCache();
 
   // Reciter API call
   RxBool isRecitersLoading = false.obs;
@@ -174,18 +176,27 @@ class AudioPlayerController extends GetxController {
       // Localized sura names from the bundled catalogue, fallback "Sura N"
       final suraNames = await _loadSuraNames();
 
-      audioData = moshaf.surahList
-          .map(
-            (suraNumber) => {
-              'path': moshaf.suraUrl(suraNumber),
-              'sura_name': suraNames[suraNumber] ?? 'Sura $suraNumber',
-              'chapter_id': suraNumber,
-              'reciter_name': reciter.name,
-              'duration': null,
-              'reciter_avatar': '',
-            },
-          )
-          .toList();
+      // Prefer a fully downloaded licensed MP3; otherwise preserve streaming.
+      audioData = await Future.wait(
+        moshaf.surahList.map((suraNumber) async {
+          final originalUrl = moshaf.suraUrl(suraNumber);
+          String? stored;
+          try {
+            stored = await _recitationCache.cachedUrl(originalUrl);
+          } catch (_) {
+            // A malformed/old provider URL must not prevent listing surahs.
+          }
+          return <String, dynamic>{
+            'path': stored ?? originalUrl,
+            'source_url': originalUrl,
+            'sura_name': suraNames[suraNumber] ?? 'Sura $suraNumber',
+            'chapter_id': suraNumber,
+            'reciter_name': reciter.name,
+            'duration': null,
+            'reciter_avatar': '',
+          };
+        }),
+      );
 
       if (kDebugMode) {
         print("Audio List: ${audioData.length} suras — ${moshaf.name}");
@@ -198,6 +209,24 @@ class AudioPlayerController extends GetxController {
       isAudioLoading(false);
       update();
     }
+  }
+
+  /// Save the selected full-surah recitation for offline playback.
+  Future<void> downloadSurahForOffline(int chapter, String reciterId) async {
+    if (chapter < 1 || chapter > 114) {
+      throw RangeError.range(chapter, 1, 114, 'chapter');
+    }
+    String? source;
+    for (final row in audioData) {
+      if (row is Map && row['chapter_id'] == chapter) {
+        source = row['source_url'] as String?;
+        break;
+      }
+    }
+    if (source == null) throw StateError('No recitation source for chapter');
+    await _recitationCache.download(source);
+    // Recreate the queue using the newly available local file URI.
+    await loadAudioList(reciterId);
   }
 
   // The bundled chapter catalogue keeps names localized without waiting for
