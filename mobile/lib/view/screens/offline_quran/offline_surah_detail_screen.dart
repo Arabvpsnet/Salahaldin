@@ -14,6 +14,7 @@ import 'package:salatime/view/base/tabbar_button.dart';
 import 'package:salatime/view/screens/offline_quran/widgets/offline_arabic_quran.dart';
 import 'package:salatime/view/screens/offline_quran/widgets/offline_ayah_translation_screen.dart';
 import 'package:salatime/view/screens/quran/quran_settings_screen.dart';
+import 'package:salatime/view/screens/quran_hifz/salahaldin_hifz_screen.dart';
 
 class OfflineSuraDetaileScreen extends StatefulWidget {
   final bool appBackButton;
@@ -75,6 +76,18 @@ class _OfflineSuraDetaileScreenState extends State<OfflineSuraDetaileScreen> {
               title: title,
               isBackButtonExist: widget.appBackButton,
               actions: [
+                IconButton(
+                  tooltip: SalahaldinHifzScreen.titleFor(context),
+                  icon: const Icon(Icons.auto_stories_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      settings: const RouteSettings(name: '/quranHifz'),
+                      builder: (_) => SalahaldinHifzScreen(
+                        initialSurah: int.tryParse(widget.surahNumber) ?? 1,
+                      ),
+                    ),
+                  ),
+                ),
                 IconButton(
                   tooltip: 'reading_progress_title'.tr,
                   onPressed: () => Navigator.of(context).push(

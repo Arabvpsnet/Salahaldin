@@ -207,6 +207,28 @@
       ],
       "availability": "source-identified-license-unverified",
       "rights": "No license found; do not copy text until rights are established."
+    },
+    {
+      "language": "ckb",
+      "dialect": "Soranî",
+      "title": "King Fahd Complex Kurdish Sorani publisher PDF",
+      "repository": "https://qurancomplex.gov.sa/quran-translations/",
+      "archivalReference": "https://github.com/quran-ws/kfgqpc-resources/tree/main/resources/quran-translations",
+      "kind": "translation",
+      "availability": "reference-only-publisher-permission-required",
+      "rights": "Publisher-owned translation text: do not bundle without written permission.",
+      "note": "Official edition PDF; rights and text verification required."
+    },
+    {
+      "language": "ckb",
+      "dialect": "Soranî",
+      "title": "Unofficial OCR Sorani JSON from King Fahd Complex",
+      "repository": "https://github.com/alurini/quran-translations",
+      "path": "data/ku/quran_ku.json",
+      "kind": "translation",
+      "availability": "source-identified-not-for-bundling",
+      "rights": "MIT applies to code/formatting, not translation text; publisher permission required.",
+      "note": "OCR/AI-extracted 6236-verse dataset may contain errors; requires independent review."
     }
   ]
 }

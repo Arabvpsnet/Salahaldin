@@ -92,7 +92,7 @@ export class Display {
         h('div', { class: 'brand-text' }, mk('brandAr', 'div', 'brand-ar ar'), mk('brandLat', 'div', 'brand-lat'))),
       h('div', { class: 'top-right' },
         mk('weather', 'div', 'weather hidden'),
-        h('div', { class: 'dates' }, mk('dateG', 'div', 'date-g'), mk('dateH', 'div', 'date-h ar'))));
+        h('div', { class: 'dates' }, mk('dateG', 'div', 'date-g'), mk('dateH', 'div', 'date-h ar'), mk('sourceWarning', 'div', 'source-warning hidden'))));
 
     const hero = h('section', { class: 'hero' },
       h('div', { class: 'clock num' }, h('span', { class: 'hm' }, mk('hh', 'span', ''), h('span', { class: 'colon' }, ':'), mk('mm', 'span', '')), mk('sec', 'span', 'sec'), mk('ampm', 'span', 'ampm')),
@@ -335,6 +335,12 @@ export class Display {
     const st = computeState(s, now);
     const L = s.lang;
     const h24 = s.display.clock24;
+    // An offline astronomical fallback is not the mosque's approved calendar.
+    // Never silently display it as a verified prayer/iqamah schedule.
+    const estimated = s.location.configured && s.calc.source !== 'calc' &&
+      st.today.source !== s.calc.source;
+    setText(this.r.sourceWarning, estimated ? t('estimatedTimes', L) : '');
+    toggleClass(this.r.sourceWarning, 'hidden', !estimated);
 
     // Clock
     const hh = h24 ? z.h : z.h % 12 || 12;
