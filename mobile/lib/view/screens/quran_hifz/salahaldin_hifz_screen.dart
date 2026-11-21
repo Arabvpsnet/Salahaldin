@@ -190,8 +190,7 @@ class _SalahaldinHifzScreenState extends State<SalahaldinHifzScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _label('عدد التكرارات', 'Repetitions', 'Gentagelser', 'Tekrar') +
-                              ' · ' + _repetitions.toString(),
+                          "${_label('عدد التكرارات', 'Repetitions', 'Gentagelser', 'Tekrar')} · $_repetitions",
                         ),
                         Slider(
                           value: _repetitions.toDouble(),
@@ -250,15 +249,10 @@ class _SalahaldinHifzScreenState extends State<SalahaldinHifzScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            _label('الآية الحالية', 'Current verse',
-                                'Nuværende vers', 'Geçerli ayet') +
-                                ': ' + _session!.currentAyah.toString(),
+                            "${_label('الآية الحالية', 'Current verse', 'Nuværende vers', 'Geçerli ayet')}: ${_session!.currentAyah}",
                           ),
                           Text(
-                            _label('التكرار المكتمل', 'Completed rounds',
-                                'Færdige runder', 'Tamamlanan tekrar') +
-                                ': ' + _session!.completedRepetitions.toString() +
-                                '/' + _session!.plan.repetitions.toString(),
+                            "${_label('التكرار المكتمل', 'Completed rounds', 'Færdige runder', 'Tamamlanan tekrar')}: ${_session!.completedRepetitions}/${_session!.plan.repetitions}",
                           ),
                           const SizedBox(height: 10),
                           LinearProgressIndicator(value: _session!.progress),
@@ -276,11 +270,7 @@ class _SalahaldinHifzScreenState extends State<SalahaldinHifzScreen> {
                             )
                           else
                             Text(
-                              _label('المراجعة التالية', 'Next review',
-                                  'Næste gentagelse', 'Sonraki tekrar') +
-                                  ': ' + _session!.plan
-                                      .reviewDate(DateTime.now())
-                                      .toIso8601String().split('T').first,
+                              "${_label('المراجعة التالية', 'Next review', 'Næste gentagelse', 'Sonraki tekrar')}: ${_session!.plan.reviewDate(DateTime.now()).toIso8601String().split('T').first}",
                             ),
                         ],
                       ),
