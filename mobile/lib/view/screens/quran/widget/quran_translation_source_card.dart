@@ -56,7 +56,15 @@ class _QuranTranslationSourceCardState
   Future<void> _open(QuranTranslationSource source) async {
     try {
       final uri = Uri.tryParse(source.sourceUrl);
-      if (uri == null || uri.scheme != 'https' || uri.host != 'quranenc.com') {
+      final permitted = uri != null &&
+          ((uri.scheme == 'https' && uri.host == 'quranenc.com') ||
+            (source.languageCode == 'kmr' &&
+             source.editionKey == 'badini_sanahi' &&
+             uri.toString() ==
+               'https://github.com/0xdolan/kurdish_quran/blob/'
+               'd0752aaa22f197261a58cad75724bac9cffd868d/'
+               'txt/translation_sanahi.txt'));
+      if (!permitted) {
         throw const FormatException('Invalid source link');
       }
       final opened =
@@ -151,7 +159,13 @@ class _QuranTranslationSourceCardState
         'quran_translation_publisher'.trParams({'publisher': source.publisher}),
       ),
       Text(
-        'QuranEnc · ${'quran_translation_version'.trParams({'version': source.version})}',
+        (StringBuffer(source.languageCode == 'kmr'
+            ? 'Sanahi · GitHub'
+            : 'QuranEnc')
+          ..write(' · ')
+          ..write('quran_translation_version'.trParams({
+            'version': source.version,
+          }))).toString(),
       ),
       if (widget.followsAppLanguage) ...[
         const SizedBox(height: 12),

@@ -29,6 +29,7 @@ class _SalahaldinEditionLibraryScreenState
     'fr': 'Français',
     'id': 'Bahasa Indonesia',
     'ku': 'کوردی — باموکی',
+    'kmr': 'بادینی — سەناهی',
     'ms': 'Bahasa Melayu',
     'tr': 'Türkçe',
     'ur': 'اردو',

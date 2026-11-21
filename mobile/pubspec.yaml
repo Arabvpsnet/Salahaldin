@@ -115,6 +115,7 @@ flutter:
     - assets/quran/translations/fr/
     - assets/quran/translations/id/
     - assets/quran/translations/ku/
+    - assets/quran/badini/
     - assets/quran/translations/ms/
     - assets/quran/translations/tr/
     - assets/quran/translations/ur/
