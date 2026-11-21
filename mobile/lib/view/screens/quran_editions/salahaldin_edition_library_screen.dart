@@ -20,6 +20,7 @@ class _SalahaldinEditionLibraryScreenState
     extends State<SalahaldinEditionLibraryScreen> {
   static const languages = <String, String>{
     'ar': 'العربية — التفسير الميسر',
+    'ar_mokhtasar': 'العربية — التفسير المختصر',
     'bn': 'বাংলা',
     'bs': 'Bosanski',
     'de': 'Deutsch',

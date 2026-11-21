@@ -42,15 +42,19 @@ class QuranTranslationRepository {
     'tr',
     'ur',
   };
+  static const supportedEditions = {...supportedLanguages, 'ar_mokhtasar'};
   static const _base = 'assets/quran/translations';
   final AssetBundle _bundle;
   Future<Map<String, QuranTranslationSource>>? _manifest;
   final _chapters = <String, Map<int, QuranTranslationVerse>>{};
   final _loading = <String, Future<Map<int, QuranTranslationVerse>>>{};
   final _badiniHashes = <int, String>{};
+  final _mokhtasarHashes = <int, String>{};
 
   static String normalizeLanguage(String code) {
-    var language = code.toLowerCase().split(RegExp('[-_]')).first;
+    final requested = code.toLowerCase();
+    if (requested == 'ar_mokhtasar') return requested;
+    var language = requested.split(RegExp('[-_]')).first;
     if (language == 'sp') language = 'es';
     if (!supportedLanguages.contains(language)) {
       throw ArgumentError.value(
@@ -100,8 +104,8 @@ class QuranTranslationRepository {
       }
       result[entry.key as String] = source;
     }
-    // Badini Sanahi is a separate user-authorized source, never presented as
-    // the Kurdish QuranEnc edition. It is pinned to an immutable upstream commit.
+    // Badini is a separate, independently attributed edition. Its source is
+    // pinned to an immutable Git commit; don't conflate it with Kurdish Bamoki.
     final badiniRaw = await _bundle.loadString(
       'assets/quran/badini/manifest.json', cache: false);
     final badini = jsonDecode(badiniRaw);
@@ -114,22 +118,63 @@ class QuranTranslationRepository {
     }
     final sanahi = QuranTranslationSource.fromJson(
       Map<String, dynamic>.from(badini['source'] as Map));
-    const pinned =
+    const pinnedBadini =
       'https://github.com/0xdolan/kurdish_quran/blob/'
       'd0752aaa22f197261a58cad75724bac9cffd868d/'
       'txt/translation_sanahi.txt';
     if (sanahi.languageCode != 'kmr' ||
         sanahi.editionKey != 'badini_sanahi' ||
-        sanahi.sourceUrl != pinned ||
+        sanahi.sourceUrl != pinnedBadini ||
         sanahi.version != 'd0752aaa22f1') {
-      throw const FormatException('Badini source attribution mismatch');
+      throw const FormatException('Badini attribution mismatch');
     }
-    final hashes = badini['surahSha256'] as Map;
+    final badiniHashMap = badini['surahSha256'] as Map;
     _badiniHashes.clear();
     for (var surah = 1; surah <= 114; surah++) {
-      final hash = hashes[surah.toString()];
-      if (hash is! String || !RegExp(r'^[a-f0-9]{64}
-      throw const FormatException('Incomplete published translation manifest');
+      final hash = badiniHashMap[surah.toString()];
+      if (hash is! String || !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
+        throw const FormatException('Missing Badini chapter hash');
+      }
+      _badiniHashes[surah] = hash;
+    }
+    result['kmr'] = sanahi;
+
+    // Al-Mukhtasar is a second Arabic tafsir; the existing Al-Muyassar remains
+    // the Arabic default. It has its own version and chapter fingerprints.
+    final mokhtasarRaw = await _bundle.loadString(
+      'assets/quran/tafsir/arabic_mokhtasar/manifest.json', cache: false);
+    final mokhtasarManifest = jsonDecode(mokhtasarRaw);
+    if (mokhtasarManifest is! Map ||
+        mokhtasarManifest['schemaVersion'] != 1 ||
+        mokhtasarManifest['editionKey'] != 'arabic_mokhtasar' ||
+        mokhtasarManifest['verseCount'] != 6236 ||
+        mokhtasarManifest['source'] is! Map ||
+        mokhtasarManifest['surahSha256'] is! Map ||
+        (mokhtasarManifest['surahSha256'] as Map).length != 114) {
+      throw const FormatException('Invalid Al-Mukhtasar tafsir manifest');
+    }
+    final mokhtasar = QuranTranslationSource.fromJson(
+      Map<String, dynamic>.from(mokhtasarManifest['source'] as Map));
+    if (mokhtasar.languageCode != 'ar' ||
+        mokhtasar.editionKey != 'arabic_mokhtasar' ||
+        !mokhtasar.isTafsir ||
+        mokhtasar.sourceUrl !=
+            'https://quranenc.com/en/browse/arabic_mokhtasar') {
+      throw const FormatException('Invalid Al-Mukhtasar publisher metadata');
+    }
+    _mokhtasarHashes.clear();
+    final mokhtasarMap = mokhtasarManifest['surahSha256'] as Map;
+    for (var surah = 1; surah <= 114; surah++) {
+      final hash = mokhtasarMap[surah.toString()];
+      if (hash is! String || !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
+        throw const FormatException('Missing Al-Mukhtasar chapter hash');
+      }
+      _mokhtasarHashes[surah] = hash;
+    }
+    result['ar_mokhtasar'] = mokhtasar;
+
+    if (result.length != supportedEditions.length) {
+      throw const FormatException('Incomplete published Quran edition catalogue');
     }
     return Map.unmodifiable(result);
   }
@@ -149,7 +194,7 @@ class QuranTranslationRepository {
     int surah,
     QuranTranslationSource source,
   ) {
-    final key = '${source.languageCode}:$surah';
+    final key = '${source.editionKey}:$surah';
     final cached = _chapters.remove(key);
     if (cached != null) {
       _chapters[key] = cached;
@@ -172,14 +217,20 @@ class QuranTranslationRepository {
     int surah,
     QuranTranslationSource source,
   ) async {
-    final chapterPath = source.languageCode == 'kmr'
-        ? 'assets/quran/badini/' + surah.toString() + '.json'
-        : 'assets/quran/translations/' + source.languageCode +
-            '/' + surah.toString() + '.json';
+    final chapterPath = source.editionKey == 'arabic_mokhtasar'
+        ? 'assets/quran/tafsir/arabic_mokhtasar/' + surah.toString() + '.json'
+        : source.languageCode == 'kmr'
+            ? 'assets/quran/badini/' + surah.toString() + '.json'
+            : 'assets/quran/translations/' + source.languageCode +
+                '/' + surah.toString() + '.json';
     final raw = await _bundle.loadString(chapterPath, cache: false);
     if (source.languageCode == 'kmr' &&
         sha256.convert(utf8.encode(raw)).toString() != _badiniHashes[surah]) {
       throw const FormatException('Badini chapter hash mismatch');
+    }
+    if (source.editionKey == 'arabic_mokhtasar' &&
+        sha256.convert(utf8.encode(raw)).toString() != _mokhtasarHashes[surah]) {
+      throw const FormatException('Al-Mukhtasar chapter hash mismatch');
     }
     return compute(_parseChapter, {
       'raw': raw,
