@@ -18,6 +18,7 @@ void main() {
         'http://server7.mp3quran.net/reciter/001.mp3',
         'https://mp3quran.net.evil.example/reciter/001.mp3',
         'https://server7.mp3quran.net/reciter/001.mp3?token=x',
+        'https://server7.mp3quran.net:8080/reciter/001.mp3',
         'https://server7.mp3quran.net/reciter/001.mp3#fragment',
         'https://user@server7.mp3quran.net/reciter/001.mp3',
         'https://server7.mp3quran.net/reciter/001.txt',

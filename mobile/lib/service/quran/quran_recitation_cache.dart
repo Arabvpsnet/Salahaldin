@@ -18,6 +18,7 @@ class QuranRecitationCache {
     if (url == null || url.scheme != 'https' ||
         !(url.host == 'mp3quran.net' || url.host.endsWith('.mp3quran.net')) ||
         url.userInfo.isNotEmpty || url.hasQuery || url.hasFragment ||
+        (url.hasPort && url.port != 443) ||
         !RegExp(r'/[0-9]{3}\.mp3$').hasMatch(url.path) ||
         url.pathSegments.contains('..')) {
       throw ArgumentError.value(raw, 'audioUrl', 'Untrusted recitation URL');
@@ -36,12 +37,28 @@ class QuranRecitationCache {
     return File('${folder.path}/${audioFilename(raw)}');
   }
 
+  static bool _hasMp3Signature(List<int> bytes) => bytes.length >= 3 &&
+      ((bytes[0] == 0x49 && bytes[1] == 0x44 && bytes[2] == 0x33) ||
+       (bytes[0] == 0xff && (bytes[1] & 0xe0) == 0xe0));
+
   Future<String?> cachedUrl(String raw) async {
     validateAudioSource(raw);
     final file = await _file(raw);
     if (!await file.exists()) return null;
-    if (await file.length() < 1024) return null;
-    return file.uri.toString();
+    try {
+      final length = await file.length();
+      if (length < 1024 || length > maxRecitationBytes) return null;
+      final handle = await file.open();
+      try {
+        if (!_hasMp3Signature(await handle.read(3))) return null;
+      } finally {
+        await handle.close();
+      }
+      return file.uri.toString();
+    } on FileSystemException {
+      // A cache entry removed between checks should be re-downloaded.
+      return null;
+    }
   }
 
   /// Downloads a single recording with a size cap and atomically installs it.
@@ -79,10 +96,7 @@ class QuranRecitationCache {
       await sink.flush();
       await sink.close();
       sink = null;
-      final validMp3 = signature.length >= 3 &&
-          ((signature[0] == 0x49 && signature[1] == 0x44 &&
-            signature[2] == 0x33) ||
-           (signature[0] == 0xff && (signature[1] & 0xe0) == 0xe0));
+      final validMp3 = _hasMp3Signature(signature);
       if (!validMp3 || bytes < 1024) {
         throw const FormatException('Downloaded file is not an MP3');
       }
