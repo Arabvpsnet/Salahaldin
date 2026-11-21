@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:salatime/service/quran/quran_translation_repository.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('fourteen separately credited offline Quran editions are discoverable', () {
     expect(QuranTranslationRepository.supportedLanguages.length, 14);
     expect(QuranTranslationRepository.supportedEditions.length, 15);
