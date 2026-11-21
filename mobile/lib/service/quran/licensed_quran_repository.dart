@@ -129,14 +129,27 @@ Map<int, List<String>> parseLicensedQuranAsset(Map<String, String> input) {
       if (verses is! List || verses.length != QuranReadingKeys.verseCounts[s - 1]) {
         throw FormatException('Incomplete tafsir chapter $s');
       }
+      // The publisher's source orders ayah keys lexicographically:
+      // 1, 10, 100, 101 ... 11, 110 ... 2. Index by explicit ayah identity.
+      // Never rewrite or normalize the original tafsir text.
+      final indexed = <int, String>{};
+      for (final row in verses) {
+        if (row is! Map || row['ayah'] is! int ||
+            row['text'] is! String ||
+            (row['text'] as String).trim().isEmpty) {
+          throw FormatException('Invalid tafsir row in chapter $s');
+        }
+        final ayah = row['ayah'] as int;
+        if (ayah < 1 || ayah > verses.length || indexed.containsKey(ayah)) {
+          throw FormatException('Duplicate or invalid tafsir verse $s:$ayah');
+        }
+        indexed[ayah] = row['text'] as String;
+      }
       final texts = <String>[];
       for (var a = 1; a <= verses.length; a++) {
-        final row = verses[a - 1];
-        if (row is! Map || row['ayah'] != a || row['text'] is! String ||
-            (row['text'] as String).trim().isEmpty) {
-          throw FormatException('Invalid tafsir ayah $s:$a');
-        }
-        texts.add(row['text'] as String);
+        final value = indexed[a];
+        if (value == null) throw FormatException('Missing tafsir verse $s:$a');
+        texts.add(value);
       }
       result[s] = List.unmodifiable(texts);
       count += texts.length;
