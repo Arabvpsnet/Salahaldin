@@ -35,3 +35,9 @@ Sources:
 - https://quranenc.com/en/home/api/
 - https://quranenc.com/en/home/about/terms
 - https://www.mp3quran.net/ar/api
+
+## Badini Sanahi independent edition
+
+The user-authorized Badini / Behdini original Sanahi verse text was imported **separately** from the QuranEnc Kurdish Bamoki edition, from upstream commit `d0752aaa22f197261a58cad75724bac9cffd868d` in `0xdolan/kurdish_quran`. GitHub Actions verified 6,236 source lines and 114 canonical surahs, hashed every resulting chapter, and retained the original upstream link in `mobile/assets/quran/badini/manifest.json`. The mobile reader verifies each chapter's SHA256 before display. This is a structural and chain-of-custody check, **not a scholarly verification of translation accuracy or identity of the copyright owner**; the user's claimed grant must match that particular edition and intended distribution.
+
+**Total after this addition:** 14 offline editions: 13 QuranEnc originals plus one separately attributed Sanahi Badini translation.

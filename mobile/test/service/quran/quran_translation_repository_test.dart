@@ -26,7 +26,7 @@ void main() {
   const base = 'assets/quran/translations';
 
   test(
-    'all ten editions map their original text and notes onto the same Arabic verses',
+    'all 14 editions preserve canonical Arabic verse identity and translation data',
     () async {
       final repository = QuranTranslationRepository();
       final canonicalRaw =
@@ -36,14 +36,17 @@ void main() {
           .expand((page) => page['page_verses'] as List)
           .toList();
       for (final language in QuranTranslationRepository.supportedLanguages) {
-        final raw =
-            jsonDecode(await rootBundle.loadString('$base/$language/1.json'))
-                as Map;
+        final path = language == 'kmr'
+            ? 'assets/quran/badini/1.json'
+            : '$base/$language/1.json';
+        final raw = jsonDecode(await rootBundle.loadString(path)) as Map;
         final model = await repository.loadSurah(1, languageCode: language);
         expect(model.translationSource!.languageCode, language);
         expect(
           model.translationSource!.sourceUrl,
-          startsWith('https://quranenc.com/'),
+          startsWith(language == 'kmr'
+              ? 'https://github.com/0xdolan/kurdish_quran/'
+              : 'https://quranenc.com/'),
         );
         final verses = model.data!.chapterInfo!
             .expand((page) => page.pageVerses!)
