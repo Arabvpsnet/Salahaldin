@@ -218,11 +218,10 @@ class QuranTranslationRepository {
     QuranTranslationSource source,
   ) async {
     final chapterPath = source.editionKey == 'arabic_mokhtasar'
-        ? 'assets/quran/tafsir/arabic_mokhtasar/' + surah.toString() + '.json'
+        ? 'assets/quran/tafsir/arabic_mokhtasar/$surah.json'
         : source.languageCode == 'kmr'
-            ? 'assets/quran/badini/' + surah.toString() + '.json'
-            : 'assets/quran/translations/' + source.languageCode +
-                '/' + surah.toString() + '.json';
+            ? 'assets/quran/badini/$surah.json'
+            : 'assets/quran/translations/${source.languageCode}/$surah.json';
     final raw = await _bundle.loadString(chapterPath, cache: false);
     if (source.languageCode == 'kmr' &&
         sha256.convert(utf8.encode(raw)).toString() != _badiniHashes[surah]) {
