@@ -105,6 +105,8 @@ flutter:
     - assets/quran/
     - assets/quran/en/
     - assets/quran/translations/
+    - assets/quran/licensed/translations/
+    - assets/quran/licensed/tafsir/
     - assets/quran/translations/ar/
     - assets/quran/translations/bn/
     - assets/quran/translations/en/
