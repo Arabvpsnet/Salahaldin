@@ -14,6 +14,11 @@ void main() {
       final finalSurah = await repository.read(114, edition.id);
       expect(first, hasLength(7), reason: edition.id);
       expect(finalSurah, hasLength(6), reason: edition.id);
+      if (edition.isTafsir) {
+        // Upstream stores chapter-2 keys in lexical order (1,10,100...).
+        // Read by canonical ayah identity without changing the source.
+        expect(await repository.read(2, edition.id), hasLength(286));
+      }
       expect(first.every((text) => text.trim().isNotEmpty), isTrue);
       expect(finalSurah.every((text) => text.trim().isNotEmpty), isTrue);
       expect(edition.credit, isNotEmpty);
