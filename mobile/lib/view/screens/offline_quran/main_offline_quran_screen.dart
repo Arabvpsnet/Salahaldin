@@ -10,6 +10,7 @@ import 'package:salatime/view/screens/offline_quran/offline_juzz_list.dart';
 import 'package:salatime/view/screens/offline_quran/widgets/offline_sura_list.dart';
 import 'package:salatime/view/screens/quran/quran_settings_screen.dart';
 import 'package:salatime/view/screens/quran_hifz/salahaldin_hifz_screen.dart';
+import 'package:salatime/view/screens/quran_editions/salahaldin_edition_library_screen.dart';
 import 'package:salatime/view/screens/quran/widget/bookmark_tab.dart';
 
 class MainOfflineQuranScreen extends StatefulWidget {
@@ -45,6 +46,16 @@ class _MainOfflineQuranScreenState extends State<MainOfflineQuranScreen>
         // title: "Offline Quran".tr,
         isBackButtonExist: widget.appBackButton == true ? true : false,
         actions: [
+          IconButton(
+            tooltip: 'مكتبة الترجمات والتفاسير',
+            icon: const Icon(Icons.translate_rounded),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                settings: const RouteSettings(name: '/quranEditions'),
+                builder: (_) => const SalahaldinEditionLibraryScreen(),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: SalahaldinHifzScreen.titleFor(context),
             icon: const Icon(Icons.auto_stories_outlined),

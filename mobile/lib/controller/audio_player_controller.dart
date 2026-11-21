@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:salatime/helper/quran_chapter_catalog.dart';
 import 'package:salatime/data/api/api_client.dart';
 import 'package:salatime/data/model/response/mp3quran_model.dart';
+import 'package:salatime/service/quran/salahaldin_recitation_cache.dart';
 import 'package:salatime/data/model/response/reciters_model.dart';
 import 'package:salatime/helper/audio_handler.dart';
 import 'package:salatime/helper/audio_service_helper.dart';
@@ -32,6 +33,12 @@ class AudioPlayerController extends GetxController {
   RecitersModel? recitersListApiData;
 
   // mp3quran.net cache (raw data, keeps the moshaf/recitation lists)
+  final _offlineRecitations = const SalahaldinRecitationCache();
+
+  Future<void> downloadSurahRecitation(String sourceUrl) async {
+    await _offlineRecitations.download(sourceUrl);
+  }
+
   List<Mp3QuranReciter> recitersMp3 = [];
   // Récitation choisie dans le sélecteur (null = première disponible)
   Moshaf? selectedMoshaf;
@@ -174,18 +181,26 @@ class AudioPlayerController extends GetxController {
       // Localized sura names from the bundled catalogue, fallback "Sura N"
       final suraNames = await _loadSuraNames();
 
-      audioData = moshaf.surahList
-          .map(
-            (suraNumber) => {
-              'path': moshaf.suraUrl(suraNumber),
-              'sura_name': suraNames[suraNumber] ?? 'Sura $suraNumber',
-              'chapter_id': suraNumber,
-              'reciter_name': reciter.name,
-              'duration': null,
-              'reciter_avatar': '',
-            },
-          )
-          .toList();
+      audioData = await Future.wait(
+        moshaf.surahList.map((suraNumber) async {
+          final remote = moshaf.suraUrl(suraNumber);
+          var path = remote;
+          try {
+            path = (await _offlineRecitations.playbackUri(remote)).toString();
+          } on FormatException {
+            // Preserve the existing streaming behavior for older API origins.
+          }
+          return <String, dynamic>{
+            'path': path,
+            'remotePath': remote,
+            'sura_name': suraNames[suraNumber] ?? 'Sura $suraNumber',
+            'chapter_id': suraNumber,
+            'reciter_name': reciter.name,
+            'duration': null,
+            'reciter_avatar': '',
+          };
+        }),
+      );
 
       if (kDebugMode) {
         print("Audio List: ${audioData.length} suras — ${moshaf.name}");
@@ -352,7 +367,7 @@ class AudioPlayerController extends GetxController {
             milliseconds: audioDuration ?? 0,
           ), // Ensure this is a Duration
           artUri: Uri.tryParse(audio['reciter_avatar'] ?? ''),
-          extras: {'chapterId': audio['chapter_id']},
+          extras: {'chapterId': audio['chapter_id'], 'remotePath': audio['remotePath']},
         );
         audioList.add(mediaItem);
       }
