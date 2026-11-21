@@ -56,7 +56,8 @@ class _QuranTranslationSourceCardState
   Future<void> _open(QuranTranslationSource source) async {
     try {
       final uri = Uri.tryParse(source.sourceUrl);
-      final permitted = uri != null &&
+      if (uri == null) throw const FormatException('Invalid source URI');
+      final permitted =
           ((uri.scheme == 'https' && uri.host == 'quranenc.com') ||
             (source.languageCode == 'kmr' &&
              source.editionKey == 'badini_sanahi' &&
