@@ -46,6 +46,8 @@ class AnalyticsScreenCatalog {
     '/notificationPhase': 'notification_phase',
     '/upcomingPrayerAlarms': 'upcoming_prayer_alarms',
     '/offlineQuranReader': 'offline_quran_reader',
+    '/quranHifz': 'quran_hifz',
+    '/quranEditions': 'quran_editions',
     '/wallpaperDetail': 'wallpaper_detail',
     '/localDhikrCount': 'local_dhikr_counter',
     '/localDuaView': 'local_dua_detail',
