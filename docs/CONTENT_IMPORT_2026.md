@@ -41,3 +41,9 @@ Sources:
 The user-authorized Badini / Behdini original Sanahi verse text was imported **separately** from the QuranEnc Kurdish Bamoki edition, from upstream commit `d0752aaa22f197261a58cad75724bac9cffd868d` in `0xdolan/kurdish_quran`. GitHub Actions verified 6,236 source lines and 114 canonical surahs, hashed every resulting chapter, and retained the original upstream link in `mobile/assets/quran/badini/manifest.json`. The mobile reader verifies each chapter's SHA256 before display. This is a structural and chain-of-custody check, **not a scholarly verification of translation accuracy or identity of the copyright owner**; the user's claimed grant must match that particular edition and intended distribution.
 
 **Total after this addition:** 14 offline editions: 13 QuranEnc originals plus one separately attributed Sanahi Badini translation.
+
+## Al-Mukhtasar — additional complete Arabic tafsir
+
+QuranEnc edition `arabic_mokhtasar` **version 1.0.0** was independently imported from the official publisher ZIP into `mobile/assets/quran/tafsir/arabic_mokhtasar/`, with all 114 surahs/6,236 ayahs, unchanged publisher translations and notes, original edition title/source, archive SHA256 and chapter SHA256. It does not replace the existing Al-Muyassar tafsir. The app's edition library now offers both choices; independent local hashes are checked before display. Source: https://quranenc.com/en/browse/arabic_mokhtasar .
+
+**Final bundle count in this work branch: 15 editions**: 13 original QuranEnc translations/tafsir, 1 Badini Sanahi translation and 1 additional Al-Mukhtasar Arabic tafsir. Official source identity and textual completeness are checked; a structural check is not theological review.

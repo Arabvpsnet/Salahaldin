@@ -161,4 +161,20 @@ void main() {
       );
     },
   );
+  test('Badini and Al-Mukhtasar chapters refuse tampered asset bytes', () async {
+    for (final entry in <String, String>{
+      'kmr': 'assets/quran/badini/1.json',
+      'ar_mokhtasar': 'assets/quran/tafsir/arabic_mokhtasar/1.json',
+    }.entries) {
+      final bundle = _Bundle();
+      final original = await rootBundle.loadString(entry.value);
+      bundle.replacements[entry.value] = '$original ';
+      final repository = QuranTranslationRepository(bundle: bundle);
+      await expectLater(
+        repository.loadSurah(1, languageCode: entry.key),
+        throwsFormatException,
+      );
+    }
+  });
+
 }

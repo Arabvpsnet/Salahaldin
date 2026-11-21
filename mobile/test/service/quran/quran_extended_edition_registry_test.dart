@@ -13,4 +13,19 @@ void main() {
     expect(QuranTranslationRepository.normalizeLanguage('kmr-IQ'), 'kmr');
     expect(QuranTranslationRepository.normalizeLanguage('ar_mokhtasar'), 'ar_mokhtasar');
   });
+  test('two Arabic tafsirs remain separately selected with full attribution', () async {
+    final repository = QuranTranslationRepository();
+    final first = await repository.loadSurah(1, languageCode: 'ar');
+    final second = await repository.loadSurah(1, languageCode: 'ar_mokhtasar');
+    expect(first.translationSource!.editionKey, 'arabic_moyassar');
+    expect(second.translationSource!.editionKey, 'arabic_mokhtasar');
+    expect(first.translationSource!.isTafsir, isTrue);
+    expect(second.translationSource!.isTafsir, isTrue);
+    expect(second.data!.chapterInfo!
+        .expand((page) => page.pageVerses!).length, 7);
+    final sanahi = await repository.loadSurah(1, languageCode: 'kmr');
+    expect(sanahi.translationSource!.editionKey, 'badini_sanahi');
+    expect(sanahi.translationSource!.isRtl, isTrue);
+  });
+
 }
