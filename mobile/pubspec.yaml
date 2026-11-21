@@ -107,11 +107,14 @@ flutter:
     - assets/quran/translations/
     - assets/quran/translations/ar/
     - assets/quran/translations/bn/
+    - assets/quran/translations/bs/
+    - assets/quran/translations/de/
     - assets/quran/translations/en/
     - assets/quran/translations/es/
     - assets/quran/translations/fa/
     - assets/quran/translations/fr/
     - assets/quran/translations/id/
+    - assets/quran/translations/ku/
     - assets/quran/translations/ms/
     - assets/quran/translations/tr/
     - assets/quran/translations/ur/

@@ -91,6 +91,7 @@ class QuranTranslationText extends StatelessWidget {
       'ar',
       'fa',
       'ur',
+      'ku',
     }.contains(language.toLowerCase().split(RegExp('[-_]')).first);
     final direction = rtl ? TextDirection.rtl : TextDirection.ltr;
     final typography =

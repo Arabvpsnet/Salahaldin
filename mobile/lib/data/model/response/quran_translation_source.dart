@@ -18,7 +18,7 @@ class QuranTranslationSource {
   final String sourceUrl;
   final bool isTafsir;
 
-  bool get isRtl => const {'ar', 'fa', 'ur'}.contains(languageCode);
+  bool get isRtl => const {'ar', 'fa', 'ur', 'ku'}.contains(languageCode);
 
   factory QuranTranslationSource.fromJson(Map<String, dynamic> json) {
     String requiredText(String key) {
