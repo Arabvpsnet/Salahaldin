@@ -38,6 +38,9 @@ EDITIONS = {
     "fa": ("persian_ih", "Rowwad Translation Center"),
     "ur": ("urdu_junagarhi", "Muhammad Ibrahim Junagarhi · Rowwad Translation Center"),
     "bn": ("bengali_zakaria", "Dr. Abu Bakr Muhammad Zakaria"),
+    "de": ("german_rwwad", "Rowwad Translation Center"),
+    "bs": ("bosnian_rwwad", "Rowwad Translation Center"),
+    "ku": ("kurdish_bamoki", "Muhammad Salih Bamoki · Rowwad Translation Center"),
 }
 
 
@@ -210,7 +213,7 @@ def main():
     counts, index_hash = verse_counts()
     if args.verify_only:
         verify_assets(args.output, counts)
-        print("Verified: 10 editions, 114 chapters each, 6236 verses each; stored SHA256 values match.")
+        print("Verified: 13 editions, 114 chapters each, 6236 verses each; stored SHA256 values match.")
         return
     old = None
     if (args.output / "manifest.json").exists():
