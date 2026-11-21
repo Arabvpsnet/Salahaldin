@@ -114,7 +114,7 @@ class HifzSession {
     final perRound = plan.lastAyah - plan.firstAyah + 1;
     final completed = completedRepetitions * perRound +
         (isComplete ? 0 : currentAyah - plan.firstAyah);
-    return (completed / (plan.repetitions * perRound)).clamp(0.0, 1.0);
+    return (completed / (plan.repetitions * perRound)).clamp(0.0, 1.0).toDouble();
   }
 
   HifzSession advance({DateTime? now}) {

@@ -34,8 +34,8 @@ class _SalahaldinHifzScreenState extends State<SalahaldinHifzScreen> {
   @override
   void initState() {
     super.initState();
-    _surah = widget.initialSurah.clamp(1, 114);
-    _last = _ayahCount(_surah).clamp(1, 5);
+    _surah = widget.initialSurah.clamp(1, 114).toInt();
+    _last = _ayahCount(_surah).clamp(1, 5).toInt();
     _initialize();
   }
 
@@ -164,7 +164,7 @@ class _SalahaldinHifzScreenState extends State<SalahaldinHifzScreen> {
                             setState(() {
                               _surah = number;
                               _first = 1;
-                              _last = _ayahCount(number).clamp(1, 5);
+                              _last = _ayahCount(number).clamp(1, 5).toInt();
                             });
                           },
                         ),
