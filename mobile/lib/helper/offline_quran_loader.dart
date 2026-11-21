@@ -122,3 +122,38 @@ String normalizeQuranSearch(String input) {
   );
   return normalized.replaceAll(_diacritics, '').trim().toLowerCase();
 }
+
+
+/// Search official in-app verses only. Full matches take precedence; if none exist,
+/// a leading Arabic article is relaxed to find more relevant verse fragments.
+/// A bounded result count prevents expensive UI rebuilds on very common words.
+List<Map<String, dynamic>> searchQuranIndex(
+  List<Map<String, dynamic>> verses,
+  String query, {
+  int maxResults = 200,
+}) {
+  final normalized = normalizeQuranSearch(query);
+  if (normalized.isEmpty || maxResults <= 0) {
+    return <Map<String, dynamic>>[];
+  }
+  List<Map<String, dynamic>> matches(String term) {
+    final results = <Map<String, dynamic>>[];
+    for (final verse in verses) {
+      final searchText = verse['_searchText'];
+      if (searchText is String && searchText.contains(term)) {
+        results.add(verse);
+        if (results.length >= maxResults) break;
+      }
+    }
+    return results;
+  }
+
+  final exact = matches(normalized);
+  if (exact.isNotEmpty) return exact;
+
+  if (normalized.startsWith('ال') && normalized.length >= 5) {
+    final withoutArticle = normalized.substring(2);
+    if (withoutArticle.length >= 3) return matches(withoutArticle);
+  }
+  return exact;
+}

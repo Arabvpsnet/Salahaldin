@@ -205,13 +205,7 @@ class OfflineQuranController extends GetxController {
 
   void _runSearch() {
     if (isClosed) return;
-    results.assignAll(
-      _query.isEmpty
-          ? <Map<String, dynamic>>[]
-          : verses.where(
-              (verse) => (verse['_searchText'] as String).contains(_query),
-            ),
-    );
+    results.assignAll(searchQuranIndex(verses, _query));
   }
 
   void clearSearch() {
