@@ -91,8 +91,8 @@ Map<int, List<String>> parseLicensedQuranAsset(Map<String, String> input) {
   var count = 0;
   if (kind == 'translation') {
     if (document is! Map || document['data'] is! Map ||
-        document['edition'] is! Map ||
-        (document['edition'] as Map)['identifier'] != id ||
+        (document['data'] as Map)['edition'] is! Map ||
+        ((document['data'] as Map)['edition'] as Map)['identifier'] != id ||
         (document['data'] as Map)['surahs'] is! List) {
       throw const FormatException('Invalid translation edition metadata');
     }
