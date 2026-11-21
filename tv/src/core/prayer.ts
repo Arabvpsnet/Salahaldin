@@ -48,7 +48,7 @@ export function calcDay(s: Settings, date: YMD, ramadan = false): DayTimes {
 /*  2. Aladhan API (monthly calendar, cached for offline use)          */
 /* ------------------------------------------------------------------ */
 
-const API_CACHE = 'sakina.aladhan.';
+const API_CACHE = 'salahaldin.aladhan.v2.';
 
 function apiParams(s: Settings): string {
   const def = methodById(s.calc.method);
@@ -72,40 +72,114 @@ function apiCacheKey(s: Settings, y: number, m: number) {
   return `${API_CACHE}${y}-${pad(m)}:${apiParams(s)}`;
 }
 
-type ApiMonth = Record<string, string[]>; // "YYYY-MM-DD" → 6 × "HH:MM"
+type ApiMonth = Record<string, string[]>; // YYYY-MM-DD → six normalized HH:MM times
+
+/** Keep only valid Aladhan wall-clock values; reject missing, malformed or misleading data. */
+function aladhanTime(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const match = /^([01]\d|2[0-3]):([0-5]\d)(?:\s+\([^()]{1,40}\))?$/.exec(value.trim());
+  return match ? match[1] + ':' + match[2] : null;
+}
+
+function validCivilDate(y: number, m: number, d: number): boolean {
+  if (![y, m, d].every(Number.isInteger) || y < 1900 || y > 2200) return false;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 &&
+    date.getUTCDate() === d;
+}
+
+function validApiMonth(value: unknown, year: number, month: number): value is ApiMonth {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const days = Object.entries(value);
+  const maxDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (days.length !== maxDays) return false;
+  return days.every(([key, times]) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+    return Boolean(match && Number(match[1]) === year && Number(match[2]) === month &&
+      validCivilDate(year, month, Number(match[3])) && Array.isArray(times) &&
+      times.length === PRAYERS.length && times.every((time) => aladhanTime(time) === time));
+  });
+}
+
+/** Convert one *complete* Aladhan month to trustworthy local wall-clock values. */
+export function parseAladhanMonth(input: unknown, year: number, month: number): ApiMonth {
+  if (!input || typeof input !== 'object') throw new Error('Invalid Aladhan response');
+  const payload = input as { code?: number; data?: unknown };
+  if (payload.code !== 200 || !Array.isArray(payload.data)) throw new Error('Invalid Aladhan response');
+  const maxDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (payload.data.length !== maxDays || payload.data.length > 31) throw new Error('Incomplete Aladhan month');
+  const result: ApiMonth = Object.create(null);
+  for (const entry of payload.data) {
+    if (!entry || typeof entry !== 'object') throw new Error('Invalid Aladhan day');
+    const value = entry as { date?: { gregorian?: { date?: unknown } }; timings?: unknown };
+    const dayText = value.date?.gregorian?.date;
+    if (typeof dayText !== 'string') throw new Error('Aladhan day lacks a date');
+    const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(dayText);
+    if (!match) throw new Error('Malformed Aladhan Gregorian date');
+    const d = Number(match[1]), m = Number(match[2]), y = Number(match[3]);
+    const dateKey = ymdKey({ y, m, d });
+    if (y !== year || m !== month || !validCivilDate(y, m, d) ||
+        Object.prototype.hasOwnProperty.call(result, dateKey)) {
+      throw new Error('Unexpected or repeated Aladhan date');
+    }
+    const raw = value.timings as Record<string, unknown> | undefined;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Aladhan times missing');
+    const times = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map((key) => aladhanTime(raw[key]));
+    if (times.some((time) => time === null)) throw new Error('Invalid Aladhan clock time');
+    result[dateKey] = times as string[];
+  }
+  if (!validApiMonth(result, year, month)) throw new Error('Incomplete Aladhan month');
+  return result;
+}
 
 export async function fetchApiMonth(s: Settings, y: number, m: number): Promise<ApiMonth> {
   const key = apiCacheKey(s, y, m);
-  try { const c = localStorage.getItem(key); if (c) return JSON.parse(c); } catch { /* ignore */ }
-  const res = await fetch(`https://api.aladhan.com/v1/calendar/${y}/${m}?${apiParams(s)}`);
-  if (!res.ok) throw new Error(`Aladhan HTTP ${res.status}`);
-  const json = await res.json();
-  const out: ApiMonth = {};
-  for (const day of json.data) {
-    const [dd, mm, yyyy] = String(day.date.gregorian.date).split('-');
-    const t = day.timings;
-    out[`${yyyy}-${mm}-${dd}`] = [t.Fajr, t.Sunrise, t.Dhuhr, t.Asr, t.Maghrib, t.Isha].map((x: string) => x.slice(0, 5));
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const cached: unknown = JSON.parse(raw);
+      if (validApiMonth(cached, y, m)) return cached;
+      localStorage.removeItem(key);
+    }
+  } catch { /* corrupted or unavailable storage — fetch fresh data */ }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  let out: ApiMonth;
+  try {
+    const response = await fetch('https://api.aladhan.com/v1/calendar/' + y + '/' + m + '?' + apiParams(s),
+      { signal: controller.signal, cache: 'no-store' });
+    if (!response.ok) throw new Error('Aladhan HTTP ' + response.status);
+    if (Number(response.headers.get('content-length') || 0) > 400000) {
+      throw new Error('Aladhan response too large');
+    }
+    const body = await response.text();
+    if (body.length > 400000) throw new Error('Aladhan response too large');
+    out = parseAladhanMonth(JSON.parse(body) as unknown, y, m);
+  } finally {
+    clearTimeout(timeout);
   }
   try {
-    // Housekeeping: keep only this month and next month for the current parameters.
+    // Keep current and following month. A cached response is always schema-checked on reuse.
     const now = todayIn(s.location.timezone);
-    const nxt = addDays({ ...now, d: 28 }, 7);
-    const keep = [apiCacheKey(s, now.y, now.m), apiCacheKey(s, nxt.y, nxt.m), key];
+    const next = addDays({ ...now, d: 28 }, 7);
+    const keep = [apiCacheKey(s, now.y, now.m), apiCacheKey(s, next.y, next.m), key];
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
-      if (k && k.startsWith(API_CACHE) && keep.indexOf(k) < 0) localStorage.removeItem(k);
+      if (k && k.startsWith(API_CACHE) && !keep.includes(k)) localStorage.removeItem(k);
     }
     localStorage.setItem(key, JSON.stringify(out));
-  } catch { /* quota */ }
+  } catch { /* full/private storage — still use fresh data */ }
   return out;
 }
 
 function cachedApiDay(s: Settings, date: YMD): string[] | null {
   try {
-    const c = localStorage.getItem(apiCacheKey(s, date.y, date.m));
-    if (c) return (JSON.parse(c) as ApiMonth)[ymdKey(date)] ?? null;
-  } catch { /* ignore */ }
-  return null;
+    const raw = localStorage.getItem(apiCacheKey(s, date.y, date.m));
+    if (!raw) return null;
+    const cached: unknown = JSON.parse(raw);
+    if (!validApiMonth(cached, date.y, date.m)) return null;
+    return cached[ymdKey(date)] ?? null;
+  } catch { return null; }
 }
 
 /* ------------------------------------------------------------------ */
@@ -121,27 +195,80 @@ function tableDay(s: Settings, date: YMD): string[] | null {
  *   date, fajr, sunrise, dhuhr, asr, maghrib, isha
  * Dates: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY or DD/MM (yearly table). A header row is skipped.
  */
+/** Preserve empty CSV cells and support quoted fields (comma, semicolon or tab). */
+function csvCells(line: string): string[] | null {
+  const cells: string[] = [];
+  let cell = '', quoted = false, closed = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (quoted && line[i + 1] === '"') { cell += '"'; i++; }
+      else if (!quoted && cell === '') quoted = true;
+      else if (quoted) { quoted = false; closed = true; }
+      else return null;
+    } else if (!quoted && (char === ',' || char === ';' || char === '\t')) {
+      cells.push(cell.trim()); cell = ''; closed = false;
+    } else {
+      if (closed && char.trim()) return null;
+      cell += char;
+    }
+  }
+  if (quoted) return null;
+  cells.push(cell.trim());
+  return cells;
+}
+
+function importClock(value: string): string | null {
+  const match = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(value);
+  return match ? pad(Number(match[1])) + ':' + match[2] : null;
+}
+
+/**
+ * Import official CSV/TSV, preserving column positions and rejecting impossible dates.
+ * A row is date, fajr, sunrise, dhuhr, asr, maghrib, isha.
+ * Dates: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, DD/MM (yearly table).
+ */
 export function parseTimetable(text: string): { rows: Record<string, string[]>; errors: number } {
-  const rows: Record<string, string[]> = {};
+  const rows: Record<string, string[]> = Object.create(null);
+  if (text.length > 512 * 1024) return { rows, errors: 1 };
   let errors = 0;
-  for (const line of text.split(/\r?\n/)) {
-    const cells = line.split(/[;,\t]/).map((c) => c.trim()).filter(Boolean);
-    if (cells.length < 7) continue;
+  for (const raw of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const cells = csvCells(line);
+    if (!cells || cells.length < 7) {
+      if (/\d/.test(line)) errors++;
+      continue;
+    }
+    if (/^date$/i.test(cells[0]) || /^datum$/i.test(cells[0])) continue;
     const key = parseDateCell(cells[0]);
-    const times = cells.slice(1, 7).map((c) => { const v = parseHM(c); return v === null ? null : `${pad(Math.floor(v / 60))}:${pad(v % 60)}`; });
-    if (!key || times.some((t) => t === null)) { if (/\d/.test(cells[0])) errors++; continue; }
+    const times = cells.slice(1, 7).map(importClock);
+    if (!key || times.some((time) => time === null) ||
+        Object.prototype.hasOwnProperty.call(rows, key) || Object.keys(rows).length >= 800) {
+      errors++;
+      continue;
+    }
     rows[key] = times as string[];
   }
   return { rows, errors };
 }
 
-function parseDateCell(c: string): string | null {
-  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(c);
-  if (m) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
-  m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(c);
-  if (m) return `${m[3]}-${pad(+m[2])}-${pad(+m[1])}`;
-  m = /^(\d{1,2})[/.-](\d{1,2})$/.exec(c);
-  if (m) return `${pad(+m[2])}-${pad(+m[1])}`;
+function parseDateCell(raw: string): string | null {
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw);
+  if (m) {
+    const year = Number(m[1]), month = Number(m[2]), day = Number(m[3]);
+    return validCivilDate(year, month, day) ? ymdKey({ y: year, m: month, d: day }) : null;
+  }
+  m = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(raw);
+  if (m) {
+    const day = Number(m[1]), month = Number(m[2]), year = Number(m[3]);
+    return validCivilDate(year, month, day) ? ymdKey({ y: year, m: month, d: day }) : null;
+  }
+  m = /^(\d{1,2})[/.-](\d{1,2})$/.exec(raw);
+  if (m) {
+    const day = Number(m[1]), month = Number(m[2]);
+    return validCivilDate(2000, month, day) ? pad(month) + '-' + pad(day) : null;
+  }
   return null;
 }
 
