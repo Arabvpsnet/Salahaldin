@@ -1,0 +1,38 @@
+name: Laravel 13 migration — PHP 8.4 dependency and regression tests
+on:
+  push:
+    branches: [upgrade/laravel13-lab]
+    paths:
+      - 'server/composer.json'
+      - 'server/composer.lock'
+      - 'server/app/**'
+      - 'server/routes/**'
+      - 'server/tests/**'
+      - 'server/lang/**'
+      - 'server/phpunit.xml'
+      - '.github/workflows/laravel13-migration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  migrate-laravel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, gd, zip, pdo_mysql, bcmath, sqlite3, pdo_sqlite
+          tools: composer:v2
+      - name: Install locked Laravel 13 dependencies
+        working-directory: server
+        run: composer install --no-interaction --no-scripts --no-plugins --no-progress
+      - name: Composer validation and security audit
+        working-directory: server
+        run: |
+          composer validate --no-check-publish
+          composer audit --locked
+          php artisan --version
+          php artisan route:list --json > /tmp/routes.json
+          php artisan test --stop-on-failure
