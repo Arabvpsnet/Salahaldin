@@ -1,0 +1,37 @@
+name: Import Arabic Al-Mukhtasar tafsir from QuranEnc
+on:
+  push:
+    branches: [content/licensed-quran-media-2026-11]
+    paths:
+      - 'mobile/tools/import_mokhtasar_tafsir.py'
+      - '.github/workflows/import-mokhtasar-tafsir.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import-tafsir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Import publisher-credited complete 114-surah Al-Mukhtasar tafsir
+        working-directory: mobile
+        run: python3 tools/import_mokhtasar_tafsir.py
+      - name: Check tafsir integrity and unchanged thirteen QuranEnc translations and Badini
+        working-directory: mobile
+        run: |
+          python3 tools/import_mokhtasar_tafsir.py --verify-only
+          python3 tools/import_quranenc_translations.py --verify-only
+          python3 tools/import_badini_sanahi.py --verify-only
+      - name: Commit separate verified tafsir version
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mobile/assets/quran/tafsir/arabic_mokhtasar/
+          if ! git diff --cached --quiet; then
+            git commit -m "Import publisher-verified Al-Mukhtasar Arabic tafsir edition"
+            git push origin HEAD:content/licensed-quran-media-2026-11
+          fi
