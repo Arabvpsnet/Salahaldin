@@ -1,7 +1,7 @@
 name: Salahaldin integration checks
 on:
   push:
-    branches: [integration/salatime-sakina-multilingual, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab, integration/community-prayer-quran-2026, content/licensed-quran-media-2026-11]
+    branches: [integration/salatime-sakina-multilingual, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab, integration/community-prayer-quran-2026, content/licensed-quran-media-2026-11, integration/salahaldin-laravel13-quran-2026]
     paths:
       - 'tv/**'
       - 'server/**'

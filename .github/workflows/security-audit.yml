@@ -1,7 +1,7 @@
 name: Security checks — dependency audits & credential guard
 on:
   push:
-    branches: [security/tv-app-hardening, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab, integration/community-prayer-quran-2026, content/licensed-quran-media-2026-11]
+    branches: [security/tv-app-hardening, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab, integration/community-prayer-quran-2026, content/licensed-quran-media-2026-11, integration/salahaldin-laravel13-quran-2026]
   pull_request:
     paths:
       - 'mobile/**'

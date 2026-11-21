@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mime\Email;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class MobileAccountWelcomeMailTest extends TestCase
 {
@@ -132,7 +133,7 @@ class MobileAccountWelcomeMailTest extends TestCase
         $this->assertSame('SalaTime', $email->getFrom()[0]->getName());
     }
 
-    /** @dataProvider welcomeLanguages */
+    #[DataProvider('welcomeLanguages')]
     public function test_welcome_uses_the_account_language_for_every_part_of_the_email(string $locale, string $subject, string $direction): void
     {
         // Per-account rendering must work independently of the website's current locale.
@@ -205,7 +206,7 @@ class MobileAccountWelcomeMailTest extends TestCase
         }
     }
 
-    /** @dataProvider fallbackLanguages */
+    #[DataProvider('fallbackLanguages')]
     public function test_missing_or_unsupported_account_language_falls_back_to_english(?string $locale): void
     {
         app()->setLocale('fr');
