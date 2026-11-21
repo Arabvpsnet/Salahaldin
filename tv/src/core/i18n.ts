@@ -34,6 +34,7 @@ const dict = {
   dhikr: { fr: 'Dhikr', en: 'Dhikr', ar: 'ذكر' },
   info: { fr: 'Information', en: 'Notice', ar: 'إعلان' },
   offline: { fr: 'Hors ligne', en: 'Offline', ar: 'غير متصل' },
+  estimatedTimes: { fr: 'Horaires estimés — calendrier du lieu indisponible', en: 'Estimated prayer times — mosque timetable unavailable', ar: 'تنبيه: مواقيت تقديرية — جدول المسجد غير متاح' },
   pin: { fr: 'Code PIN', en: 'PIN code', ar: 'الرمز السري' },
   wrongPin: { fr: 'Code incorrect', en: 'Wrong code', ar: 'رمز خاطئ' },
   tomorrow: { fr: 'demain', en: 'tomorrow', ar: 'غداً' },
@@ -44,8 +45,8 @@ const dict = {
 
 export type I18nKey = keyof typeof dict;
 const extra: Record<'da' | 'tr', Partial<Record<I18nKey, string>>> = {
-  da: {next: 'Næste bøn', in: 'om', iqama: 'Iqama', adhan: 'Adhan', iqamaIn: 'Iqama om', adhanNow: 'Det er tid til adhan', prayerNow: 'Bønnen er i gang', silence: 'Sluk venligst mobiltelefonen', straighten: 'Ret rækkerne op', afterPrayer: 'Dhikr efter bønnen', duaAfterAdhan: 'Dua efter adhan', imsak: 'Imsak', iftar: 'Iftar', ramadan: 'Ramadan mubarak', enableSound: 'Tryk på skærmen for at aktivere adhanlyden', settings: 'Indstillinger', fullscreen: 'Fuld skærm', ayah: 'Vers', dhikr: 'Dhikr', info: 'Meddelelse', offline: 'Offline', pin: 'PIN-kode', wrongPin: 'Forkert kode', tomorrow: 'i morgen', eid: 'Eid-bøn', duha: 'Duha', qiyam: 'Den sidste tredjedel af natten'},
-  tr: {next: 'Sonraki namaz', in: 'sonra', iqama: 'Kamet', adhan: 'Ezan', iqamaIn: 'Kamete kalan', adhanNow: 'Ezan vakti', prayerNow: 'Namaz kılınıyor', silence: 'Lütfen telefonlarınızı kapatın', straighten: 'Safları düzeltin', afterPrayer: 'Namaz sonrası zikirler', duaAfterAdhan: 'Ezan duası', imsak: 'İmsak', iftar: 'İftar', ramadan: 'Hayırlı Ramazanlar', enableSound: 'Ezan sesini etkinleştirmek için ekrana dokunun', settings: 'Ayarlar', fullscreen: 'Tam ekran', ayah: 'Ayet', dhikr: 'Zikir', info: 'Duyuru', offline: 'Çevrimdışı', pin: 'PIN kodu', wrongPin: 'Yanlış kod', tomorrow: 'yarın', eid: 'Bayram namazı', duha: 'Duha', qiyam: 'Gecenin son üçte biri'},
+  da: {next: 'Næste bøn', in: 'om', iqama: 'Iqama', adhan: 'Adhan', iqamaIn: 'Iqama om', adhanNow: 'Det er tid til adhan', prayerNow: 'Bønnen er i gang', silence: 'Sluk venligst mobiltelefonen', straighten: 'Ret rækkerne op', afterPrayer: 'Dhikr efter bønnen', duaAfterAdhan: 'Dua efter adhan', imsak: 'Imsak', iftar: 'Iftar', ramadan: 'Ramadan mubarak', enableSound: 'Tryk på skærmen for at aktivere adhanlyden', settings: 'Indstillinger', fullscreen: 'Fuld skærm', ayah: 'Vers', dhikr: 'Dhikr', info: 'Meddelelse', offline: 'Offline', estimatedTimes: 'Beregnet bedetid – moskeens kalender er utilgængelig', pin: 'PIN-kode', wrongPin: 'Forkert kode', tomorrow: 'i morgen', eid: 'Eid-bøn', duha: 'Duha', qiyam: 'Den sidste tredjedel af natten'},
+  tr: {next: 'Sonraki namaz', in: 'sonra', iqama: 'Kamet', adhan: 'Ezan', iqamaIn: 'Kamete kalan', adhanNow: 'Ezan vakti', prayerNow: 'Namaz kılınıyor', silence: 'Lütfen telefonlarınızı kapatın', straighten: 'Safları düzeltin', afterPrayer: 'Namaz sonrası zikirler', duaAfterAdhan: 'Ezan duası', imsak: 'İmsak', iftar: 'İftar', ramadan: 'Hayırlı Ramazanlar', enableSound: 'Ezan sesini etkinleştirmek için ekrana dokunun', settings: 'Ayarlar', fullscreen: 'Tam ekran', ayah: 'Ayet', dhikr: 'Zikir', info: 'Duyuru', offline: 'Çevrimdışı', estimatedTimes: 'Tahmini namaz vakitleri – cami takvimi kullanılamıyor', pin: 'PIN kodu', wrongPin: 'Yanlış kod', tomorrow: 'yarın', eid: 'Bayram namazı', duha: 'Duha', qiyam: 'Gecenin son üçte biri'},
 };
 export const t = (k: I18nKey, lang: Lang): string => {
   if (lang === 'da' || lang === 'tr') return extra[lang][k] ?? dict[k].en;
