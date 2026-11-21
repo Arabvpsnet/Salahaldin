@@ -49,7 +49,7 @@ void main() {
   test('rejects fake mp3 documents', () async {
     final cache = SalahaldinRecitationCache(root: temp,
       client: MockClient((request) async =>
-          http.Response('x' * 150, 200,
+          http.Response(List<String>.filled(150, 'x').join(), 200,
             headers: {'content-type': 'text/html'})));
     await expectLater(cache.download(url), throwsFormatException);
     expect(await cache.cached(url), isNull);
