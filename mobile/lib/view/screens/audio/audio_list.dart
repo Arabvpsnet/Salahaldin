@@ -193,9 +193,9 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
                         try {
                           await _controller.downloadSurahForOffline(
                             chapter, widget.reciterId.toString());
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
                                 Localizations.localeOf(context).languageCode == 'ar'
                                     ? 'حُفظت التلاوة للاستماع دون إنترنت'
@@ -204,9 +204,9 @@ class _AudioPlayerViewState extends State<AudioPlayerView> {
                             ),
                           );
                         } catch (_) {
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
                                 Localizations.localeOf(context).languageCode == 'ar'
                                     ? 'تعذر تحميل التلاوة'

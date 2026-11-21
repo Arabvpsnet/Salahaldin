@@ -93,7 +93,7 @@ class AudioPlayerController extends GetxController {
       if (response.body.length <= 1000000) {
         try {
           final preferences = await SharedPreferences.getInstance();
-          await preferences.setString('salahaldin.mp3quran.catalog.' + language,
+          await preferences.setString('salahaldin.mp3quran.catalog.$language',
               response.body);
         } catch (_) {
           // Playback must not depend on writable preferences.
@@ -105,11 +105,15 @@ class AudioPlayerController extends GetxController {
       try {
         final preferences = await SharedPreferences.getInstance();
         final saved = preferences.getString(
-          'salahaldin.mp3quran.catalog.' + language);
-        if (saved == null || saved.length > 1000000) return null;
+          'salahaldin.mp3quran.catalog.$language');
+        if (saved == null || saved.length > 1000000) {
+          return null;
+        }
         final document = jsonDecode(saved);
         if (document is! Map<String, dynamic> ||
-            document['reciters'] is! List) return null;
+            document['reciters'] is! List) {
+          return null;
+        }
         final reciters = Mp3QuranResponse.fromJson(document).reciters!;
         _reciterCatalogs[language] = reciters;
         return reciters;

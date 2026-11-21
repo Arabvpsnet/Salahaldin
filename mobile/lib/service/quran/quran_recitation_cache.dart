@@ -27,13 +27,13 @@ class QuranRecitationCache {
 
   static String audioFilename(String raw) {
     final url = validateAudioSource(raw);
-    return sha256.convert(utf8.encode(url.toString())).toString() + '.mp3';
+    return '${sha256.convert(utf8.encode(url.toString()))}.mp3';
   }
 
   Future<File> _file(String raw) async {
     final root = await getApplicationSupportDirectory();
-    final folder = Directory(root.path + '/quran/recitations');
-    return File(folder.path + '/' + audioFilename(raw));
+    final folder = Directory('${root.path}/quran/recitations');
+    return File('${folder.path}/${audioFilename(raw)}');
   }
 
   Future<String?> cachedUrl(String raw) async {
@@ -52,7 +52,7 @@ class QuranRecitationCache {
     if (await cachedUrl(source) case final String cached) return cached;
 
     await output.parent.create(recursive: true);
-    final partial = File(output.path + '.partial');
+    final partial = File('${output.path}.partial');
     if (await partial.exists()) await partial.delete();
 
     IOSink? sink;

@@ -144,8 +144,7 @@ class _LicensedQuranReaderTabState extends State<LicensedQuranReaderTab> {
               final texts = snapshot.data!;
               return ListView.builder(
                 key: PageStorageKey<String>(
-                  'licensed_' + source.id + '_' +
-                  widget.surahNumber.toString(),
+                  'licensed_${source.id}_${widget.surahNumber}',
                 ),
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
                 itemCount: texts.length,
@@ -160,8 +159,7 @@ class _LicensedQuranReaderTabState extends State<LicensedQuranReaderTab> {
                           : CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.surahNumber.toString() +
-                            ':' + (index + 1).toString(),
+                          '${widget.surahNumber}:${index + 1}',
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         const SizedBox(height: 10),

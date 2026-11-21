@@ -60,7 +60,9 @@ class LicensedQuranRepository {
       final data = await pending;
       _loaded.remove(id);
       _loaded[id] = data;
-      while (_loaded.length > 2) _loaded.remove(_loaded.keys.first);
+      while (_loaded.length > 2) {
+        _loaded.remove(_loaded.keys.first);
+      }
       return data[surah]!;
     } finally {
       _pending.remove(id);
