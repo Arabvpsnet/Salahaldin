@@ -1,0 +1,75 @@
+name: Security checks — dependency audits & credential guard
+on:
+  push:
+    branches: [security/tv-app-hardening, upgrade/full-stack-2026-11, upgrade/laravel13-lab, upgrade/frontend-latest-lab, upgrade/flutter-latest-lab, integration/community-prayer-quran-2026, content/licensed-quran-media-2026-11, integration/salahaldin-laravel13-quran-2026, hardening/salahaldin-release-gates-2026]
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - 'tv/**'
+      - 'server/**'
+      - 'security/**'
+      - '.github/workflows/security-audit.yml'
+      - '.github/dependabot.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
+permissions:
+  contents: read
+jobs:
+  tv-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Audit installed TV packages from lockfile
+        working-directory: tv
+        run: npm audit --package-lock-only --audit-level=high --json > ../tv-npm-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tv-dependency-audit
+          path: tv-npm-audit.json
+  server-js-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit backend JS packages from lockfile
+        working-directory: server
+        run: npm audit --package-lock-only --audit-level=high --json > ../server-npm-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: server-js-dependency-audit
+          path: server-npm-audit.json
+  server-php-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php -v && composer --version
+      - name: Audit locked composer dependencies
+        working-directory: server
+        run: composer audit --locked --format=json > ../composer-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: composer-dependency-audit
+          path: composer-audit.json
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect tracked repository files for secrets
+        run: python3 security/scan_secrets.py
+      - name: Parse all JSON security and Quran contracts
+        run: |
+          python3 -m json.tool shared/contracts/mosque-schedule.schema.json > /dev/null
+          python3 -m json.tool shared/quran/edition-catalog.json > /dev/null
+      - name: Verify licenses retained
+        run: |
+          for dir in tv mobile server; do test -s "$dir/LICENSE" || exit 1; done
+          test -s mobile/THIRD_PARTY_NOTICES.md

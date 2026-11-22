@@ -1,0 +1,60 @@
+{
+  "name": "salahaldin-tv",
+  "version": "1.1.0",
+  "description": "Salahaldin multilingual mosque TV app with adhan, iqamah, adhkar and live mosque calendars",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Arabvpsnet/Salahaldin/tree/main/tv"
+  },
+  "keywords": [
+    "mosque",
+    "masjid",
+    "prayer-times",
+    "salah",
+    "adhan",
+    "iqama",
+    "android-tv",
+    "smart-tv",
+    "pwa"
+  ],
+  "scripts": {
+    "start": "vite build && vite preview --host --port 4173 --open",
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "fixtures": "node scripts/fetch-fixtures.mjs",
+    "brand": "node scripts/brand-assets.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "content": "node scripts/fetch-content.mjs",
+    "backgrounds": "node scripts/fetch-backgrounds.mjs",
+    "android:sync": "vite build && cap sync android",
+    "android:open": "cap open android",
+    "android:apk": "vite build && cap sync android && cd android && ./gradlew assembleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource/amiri": "^5.3.0",
+    "@fontsource/amiri-quran": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/reem-kufi": "^5.3.0",
+    "adhan": "^4.4.6",
+    "lucide": "^1.77.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
+    "@phosphor-icons/core": "^2.1.1",
+    "puppeteer-core": "^25.18.1",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.1"
+  }
+}

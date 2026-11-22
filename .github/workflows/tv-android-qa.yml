@@ -1,0 +1,51 @@
+name: Salahaldin TV — native Android QA APK
+on:
+  push:
+    branches: [hardening/salahaldin-release-gates-2026]
+    paths:
+      - 'tv/**'
+      - '.github/workflows/tv-android-qa.yml'
+  pull_request:
+    paths:
+      - 'tv/**'
+      - '.github/workflows/tv-android-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tv-native-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tv/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install exact TV dependencies
+        working-directory: tv
+        run: npm ci
+      - name: Verify web code and bundle
+        working-directory: tv
+        run: |
+          npm run typecheck
+          npm test
+          npm run build
+      - name: Synchronize native Android TV project
+        working-directory: tv
+        run: npx cap sync android
+      - name: Build unsigned Android TV debug APK
+        working-directory: tv/android
+        run: bash ./gradlew :app:assembleDebug --no-daemon
+      - name: Upload TV debug APK for device validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: salahaldin-tv-debug-qa
+          path: tv/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

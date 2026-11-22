@@ -1,0 +1,1259 @@
+#!/usr/bin/env python3
+"""Submit the exact SalaTime in-app update release from CI without logging private data.
+
+Only --submit mutates App Store Connect. --preflight is GET-only. New versions
+inherit Apple's metadata; preservation is verified before creating any review
+submission. No review password/contact, signing key, JWT or raw API body is saved.
+"""
+from __future__ import annotations
+
+import argparse
+import base64
+import copy
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import tempfile
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+from ios_store_locales import NEW_LOCALES, NEW_LOCALE_WHATS_NEW
+
+APP_ID = '6812923710'
+BUNDLE_ID = 'net.salatime.app'
+API = 'https://api.appstoreconnect.apple.com'
+LOCALIZATION_FIELDS = ('description', 'keywords', 'marketingUrl', 'supportUrl', 'promotionalText')
+REVIEW_FIELDS = ('contactFirstName', 'contactLastName', 'contactPhone', 'contactEmail',
+                 'demoAccountName', 'demoAccountPassword', 'demoAccountRequired')
+EDITABLE = {'PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED',
+            'METADATA_REJECTED', 'READY_FOR_REVIEW'}
+SUBMITTED = {'WAITING_FOR_REVIEW', 'IN_REVIEW', 'PENDING_DEVELOPER_RELEASE',
+             'PENDING_APPLE_RELEASE', 'PROCESSING_FOR_APP_STORE', 'READY_FOR_SALE',
+             'READY_FOR_DISTRIBUTION'}
+# Keyword fields set for the new version (100-byte Apple limit). Words already in
+# the name or subtitle are not repeated: Apple indexes those fields together.
+KEYWORDS = {
+    'en-US': 'salah,salat,namaz,azan,athan,dua,muslim,islam,mosque,hijri,ramadan,dhikr,tasbih,zakat,hadith,kaaba',
+    'fr-FR': 'horaire,salat,namaz,azan,quran,invocation,musulman,islam,mosquée,hégire,ramadan,dhikr,tasbih,zakat',
+    'ar-SA': 'صلاة,مواقيت,أذان,قبلة,زكاة,هجري,أذكار,دعاء,مساجد,رمضان',
+}
+WHATS_NEW = {
+    'fr-FR': 'Mise à jour plus simple : le bandeau « Mettre à jour » ouvre la page App Store de SalaTime directement dans l’app.',
+    'en-US': 'Easier updates: the Update banner now opens SalaTime’s App Store page right inside the app.',
+    'ar-SA': 'تحديث أسهل: يفتح شريط «تحديث» صفحة SalaTime على App Store مباشرة داخل التطبيق.',
+}
+RATING_REVIEW_NOTE = ('Rating fix: StoreKit requests a review after 3 distinct usage days and 72 hours, '
+               'following 10 quiet seconds on Home (30-day interval, maximum 3 attempts). '
+               'No custom prompt or satisfaction question. Apple controls display; TestFlight '
+               'shows no prompt. Settings > Rate SalaTime opens App Store reviews immediately.')
+REVIEW_NOTE = ('Update banner opens App Store page in-app (StoreKit); no new data/permission. '
+               'Reliability fix: compass, location and Nisab. '
+               'Production error/hang reporting remains active; CI sends no telemetry. '
+               'Rating fix: StoreKit after 3 usage days/72 hours and 10 quiet Home seconds; '
+               '30-day interval, maximum 3 attempts. Apple controls display; no custom prompt; TestFlight shows none. '
+               'Settings > Rate SalaTime opens reviews. Language fix: account/welcome languages unchanged (10). '
+               'Analytics: Firebase screens/events; no account ID, GPS or query content; no ads/IDFA/IDFV. '
+               'More > Settings > Usage statistics disables collection. '
+               'Update banner: Home store link, 24h snooze.')
+
+
+EDITABLE_INFO = {'PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED',
+                 'READY_FOR_REVIEW'}
+
+
+def release_notes(locale):
+    return WHATS_NEW[locale] if locale in WHATS_NEW else NEW_LOCALE_WHATS_NEW[locale]
+
+
+def new_locale_fields(locale, source):
+    """Version text for a newly added listing; URLs follow the English listing."""
+    english = source['locales']['en-US']['row']['attributes']
+    fields = {f: NEW_LOCALES[locale][f] for f in ('description', 'keywords', 'promotionalText')}
+    fields.update({f: english[f] for f in ('supportUrl', 'marketingUrl') if english.get(f)})
+    fields['whatsNew'] = release_notes(locale)
+    return fields
+
+
+def expected_localization(locale, previous, field):
+    """Previous version text, except the keyword fields deliberately updated."""
+    if field == 'keywords' and locale in KEYWORDS:
+        return KEYWORDS[locale]
+    return previous.get(field)
+
+
+def review_notes(source_notes, previous_version, attachments_inherited, release_note=None):
+    """Keep review access and demo evidence without appending an unbounded history.
+
+    The previous version remains the complete, untouched historical record. This
+    release's notes retain its account instructions, demonstration paragraphs and
+    every original URL. Unknown source layouts are preserved verbatim and fail
+    safely if they cannot fit; no arbitrary truncation or private field is used.
+    Apple's Notes limit is 4,000 UTF-8 bytes, rather than 4,000 characters.
+    """
+    source_notes = source_notes.rstrip()
+    origin = re.search(r'Historical demonstration context from version (\d+\.\d+\.\d+)\.', source_notes)
+    history = f'Historical demonstration context from version {origin[1] if origin else previous_version}. '
+    if not attachments_inherited or 'remains attached to that previous version' in source_notes:
+        history += ('Any demonstration attachment mentioned below remains attached to that previous version. '
+                    'This update adds no physical-device recording. ')
+    history += 'Existing demo links and limitations remain applicable.'
+    paragraphs = [paragraph.strip() for paragraph in re.split(r'\n\s*\n', source_notes) if paragraph.strip()]
+    known_layout = (any(paragraph.startswith(('LOCATION (', 'LOCATION:')) for paragraph in paragraphs)
+                    and any(paragraph.startswith(('ACCESS AND ACCOUNTS', 'PURPOSE, ACCESS AND ACCOUNTS', 'ACCESS:'))
+                            for paragraph in paragraphs))
+    if known_layout:
+        # Retain actual evidence and limitations exactly; only qualify stale
+        # "new/attached" labels so they cannot imply a recording of this release.
+        demonstrations = []
+        for paragraph in paragraphs:
+            if paragraph.startswith(('NEW PHYSICAL IPHONE DEMO', 'HISTORICAL PHYSICAL IPHONE DEMO', 'EXISTING ACCOUNT/FEATURE DEMO',
+                                     'EXISTING PHYSICAL-DEVICE DEMO')):
+                paragraph = re.sub(r'^NEW PHYSICAL IPHONE DEMO', 'HISTORICAL PHYSICAL IPHONE DEMO', paragraph)
+                paragraph = paragraph.replace('The attached SalaTime-AppReview-demo.mp4',
+                                              'The historical SalaTime-AppReview-demo.mp4')
+                demonstrations.append(paragraph)
+        require(bool(demonstrations), 'Previous demonstration notes need review before submission')
+        account = [line.strip() for line in source_notes.splitlines()
+                   if line.strip().startswith(('Settings > Account:', 'Create account:'))]
+        require(any(line.startswith('Settings > Account:') for line in account),
+                'Previous account instructions need review before submission')
+        sections = [release_note or REVIEW_NOTE,
+            ('ACCESS: Free public prayer/Quran tools; no membership, purchase or subscription. '
+             'Core features need no account. Streaming, maps and sync need internet. '
+             'Location/notifications are optional; a manual city is available.'),
+            *account,
+            ('LOCATION: More > Settings > Prayer time settings > Update as you travel '
+             '(French: Actualiser lors des déplacements). Optional; not requested at onboarding. '
+             'One neutral Next button precedes system authorization; no Activate/No thanks choice or dismissal. '
+             'Refusal returns to settings without another prompt or automatic Settings redirect. '
+             'While Using access refreshes location in foreground; Always permits background updates '
+             'with the iOS location indicator. About 3 km triggers prayer-time, widget and adhan refresh. '
+             'Switching off travel updates or choosing a manual city stops the stream. No GPS route history. '
+             'Real-travel validation is not claimed complete.'),
+            history, *demonstrations,
+            ('CONTENT: No public posts, messaging, UGC, AI, paid features, subscriptions or IAP. '
+             'MP3Quran audio and QuranEnc translations retain source attribution; permission terms '
+             'are the basis for use, without exclusivity or endorsement. Same features in configured '
+             'territories; mainland China excluded. Language/location affect content/times. '
+             'No regional paywalls; network/map coverage may affect online features.')]
+    else:
+        sections = [release_note or REVIEW_NOTE, history, source_notes]
+    notes = '\n\n'.join(section for section in sections if section)
+    # Existing public evidence/permission/support links are retained byte-for-byte.
+    urls = list(dict.fromkeys(re.findall(r'https?://[^\s<>]+', source_notes)))
+    missing_urls = [url for url in urls if url not in notes]
+    if missing_urls:
+        notes += '\n\nExisting reference links:\n' + '\n'.join(missing_urls)
+    require(len(notes.encode('utf-8')) <= 4000, 'Essential review notes exceed Apple UTF-8 byte limit')
+    require(all(url in notes for url in urls), 'Historical reference link preservation failed')
+    return notes
+
+
+class ReleaseError(RuntimeError):
+    """Messages are fixed, public release diagnostics, never server details."""
+
+
+class APIError(ReleaseError):
+    def __init__(self, status, body=b''):
+        self.status = status
+        try:
+            errors = json.loads(body).get('errors', [])
+            codes = [e.get('code', '') for e in errors]
+            codes = [c for c in codes if isinstance(c, str) and re.fullmatch(r'[A-Z0-9_.-]+', c)]
+        except (ValueError, TypeError, AttributeError):
+            codes = []
+        super().__init__(f'App Store Connect HTTP {status}; codes={",".join(codes) or "unavailable"}')
+
+
+def require(condition, message):
+    if not condition:
+        raise ReleaseError(message)
+
+
+def b64url(value):
+    return base64.urlsafe_b64encode(value).rstrip(b'=').decode('ascii')
+
+
+def der_signature_to_raw(der):
+    # P-256 signatures contain exactly two ASN.1 INTEGERs in a short SEQUENCE.
+    require(len(der) >= 8 and der[0] == 0x30 and der[1] == len(der) - 2,
+            'Invalid ES256 signature sequence')
+    offset, values = 2, []
+    for _ in range(2):
+        require(offset + 2 <= len(der) and der[offset] == 2, 'Invalid ES256 signature integer')
+        size = der[offset + 1]
+        value = der[offset + 2:offset + 2 + size]
+        require(len(value) == size and size > 0 and not value[0] & 0x80,
+                'Invalid ES256 signature value')
+        value = value.lstrip(b'\x00')
+        require(len(value) <= 32, 'ES256 signature exceeds P-256 size')
+        values.append(value.rjust(32, b'\x00'))
+        offset += size + 2
+    require(offset == len(der), 'Trailing ES256 signature data')
+    return b''.join(values)
+
+
+class TokenSigner:
+    def __init__(self, private_key, key_id, issuer_id):
+        require(bool(re.fullmatch(r'[A-Z0-9]{10}', key_id)), 'Invalid ASC key identifier')
+        require(bool(re.fullmatch(r'[a-fA-F0-9-]{36}', issuer_id)), 'Invalid ASC issuer identifier')
+        self.key_id, self.issuer_id = key_id, issuer_id
+        self.directory = tempfile.TemporaryDirectory(prefix='salatime-asc-')
+        self.path = Path(self.directory.name) / 'key.p8'
+        self.path.write_bytes(private_key)
+        self.path.chmod(0o600)
+
+    def close(self):
+        self.directory.cleanup()
+
+    def token(self):
+        now = int(time.time())
+        header = b64url(json.dumps({'alg': 'ES256', 'kid': self.key_id, 'typ': 'JWT'}).encode())
+        claims = b64url(json.dumps({'iss': self.issuer_id, 'iat': now, 'exp': now + 120,
+                                   'aud': 'appstoreconnect-v1'}).encode())
+        message = f'{header}.{claims}'.encode()
+        result = subprocess.run(['openssl', 'dgst', '-sha256', '-sign', str(self.path)],
+                                input=message, capture_output=True)
+        require(result.returncode == 0, 'Apple API authentication signing failed')
+        return f'{header}.{claims}.{b64url(der_signature_to_raw(result.stdout))}'
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, file_pointer, code, message, headers, new_url):
+        raise ReleaseError('App Store Connect redirects are not permitted')
+
+
+class Client:
+    def __init__(self, signer, opener=None, sleep=time.sleep):
+        self.signer, self.opener, self.sleep = signer, opener or urllib.request.build_opener(NoRedirect()).open, sleep
+        self.deadline = None
+
+    def request(self, method, path, payload=None):
+        url = urllib.parse.urljoin(API, path)
+        parsed = urllib.parse.urlsplit(url)
+        require(parsed.scheme == 'https' and parsed.netloc == 'api.appstoreconnect.apple.com'
+                and parsed.path.startswith('/v1/'), 'Unexpected App Store Connect endpoint')
+        body = json.dumps(payload).encode() if payload is not None else None
+        # Retry reads only. An ambiguous mutation is reconciled by the next run,
+        # never blindly repeated with potentially duplicate POST resources.
+        for attempt in range(4 if method == 'GET' else 1):
+            remaining = self.deadline - time.monotonic() if self.deadline is not None else 30
+            require(remaining > 0, 'Apple build processing wait reached its time limit')
+            request = urllib.request.Request(url, data=body, method=method,
+                                            headers={'Authorization': 'Bearer ' + self.signer.token(),
+                                                     'Content-Type': 'application/json'})
+            try:
+                with self.opener(request, timeout=min(30, remaining)) as response:
+                    raw = response.read()
+                    return json.loads(raw) if raw else {}
+            except urllib.error.HTTPError as error:
+                raw = error.read()
+                if method == 'GET' and error.code in (429, 500, 502, 503, 504) and attempt < 3:
+                    self.sleep(min(2 ** attempt, max(0, self.deadline - time.monotonic()))
+                               if self.deadline is not None else 2 ** attempt)
+                    continue
+                raise APIError(error.code, raw) from None
+            except (urllib.error.URLError, TimeoutError, OSError):
+                if method == 'GET' and attempt < 3:
+                    self.sleep(min(2 ** attempt, max(0, self.deadline - time.monotonic()))
+                               if self.deadline is not None else 2 ** attempt)
+                    continue
+                raise ReleaseError('App Store Connect connection failed; rerun to reconcile state') from None
+        raise ReleaseError('App Store Connect read retry limit reached')
+
+    def get(self, path):
+        return self.request('GET', path)
+
+    def rows(self, path):
+        rows = []
+        for _ in range(20):
+            response = self.get(path)
+            rows.extend(response.get('data', []))
+            path = response.get('links', {}).get('next')
+            if not path:
+                return rows
+        raise ReleaseError('App Store Connect pagination limit reached')
+
+
+def resource(kind, identifier=None, attributes=None, relationships=None):
+    data = {'type': kind}
+    if identifier is not None:
+        data['id'] = identifier
+    if attributes is not None:
+        data['attributes'] = attributes
+    if relationships is not None:
+        data['relationships'] = relationships
+    return {'data': data}
+
+
+def relation(kind, identifier):
+    return {'data': {'type': kind, 'id': identifier}}
+
+
+def related_id(row, name):
+    return (row.get('relationships', {}).get(name, {}).get('data') or {}).get('id')
+
+
+def query(path, **parameters):
+    return path + '?' + urllib.parse.urlencode(parameters)
+
+
+def verify_source_version(version, path=Path('pubspec.yaml')):
+    match = re.search(r'^version:\s*([^+\s]+)', path.read_text(), re.MULTILINE)
+    require(match is not None and match[1] == version,
+            'Local Flutter version does not match the requested App Store release')
+
+
+def asset_signature(rows):
+    result = []
+    for row in rows:
+        attributes = row['attributes']
+        require(attributes.get('assetDeliveryState', {}).get('state') == 'COMPLETE',
+                'Inherited review asset is not complete')
+        checksum = attributes.get('sourceFileChecksum')
+        require(bool(checksum), 'Inherited review asset has no source checksum')
+        result.append((attributes.get('fileName'), attributes.get('fileSize'), checksum.lower()))
+    return result
+
+
+class Submission:
+    def __init__(self, api, version, build_number, previous_version='1.0.27',
+                 wait_seconds=1200, sleep=time.sleep, clock=time.monotonic, receipt=None):
+        require(bool(re.fullmatch(r'\d+\.\d+\.\d+', version)), 'Invalid release version')
+        require(bool(re.fullmatch(r'\d+\.\d+\.\d+', previous_version)), 'Invalid previous version')
+        require(tuple(map(int, version.split('.'))) > tuple(map(int, previous_version.split('.'))),
+                'Release version must increase')
+        require(bool(re.fullmatch(r'[1-9]\d*', build_number)), 'Invalid build number')
+        require(0 <= wait_seconds <= 1200, 'Processing wait exceeds twenty minutes')
+        self.api, self.version, self.build_number = api, version, build_number
+        self.previous_version, self.wait_seconds = previous_version, wait_seconds
+        self.sleep, self.clock = sleep, clock
+        self.report = {'app_id': APP_ID, 'bundle_id': BUNDLE_ID, 'version': version,
+                       'build_number': build_number, 'source_commit': os.environ.get('GITHUB_SHA'),
+                       'status': 'started', 'stage': 'preflight'}
+        self.receipt = receipt
+
+    def save(self, **values):
+        self.report.update(values)
+        if self.receipt:
+            self.receipt.parent.mkdir(parents=True, exist_ok=True)
+            self.receipt.write_text(json.dumps(self.report, ensure_ascii=False, indent=2) + '\n')
+
+    def versions(self):
+        return self.api.rows(query(f'/v1/apps/{APP_ID}/appStoreVersions',
+                                   **{'filter[platform]': 'IOS', 'limit': 200}))
+
+    def target_build(self):
+        response = self.api.get(query('/v1/builds', **{'filter[app]': APP_ID,
+                                'filter[version]': self.build_number,
+                                'include': 'preReleaseVersion', 'limit': 200}))
+        require(not response.get('links', {}).get('next'), 'Exact build query requires pagination')
+        versions = {row['id']: (row['attributes'].get('version'), row['attributes'].get('platform'))
+                    for row in response.get('included', []) if row['type'] == 'preReleaseVersions'}
+        matches = []
+        for row in response.get('data', []):
+            if row['attributes'].get('version') != self.build_number:
+                continue
+            pre_id = related_id(row, 'preReleaseVersion')
+            if pre_id not in versions:
+                pre = self.api.get(f'/v1/builds/{row["id"]}/preReleaseVersion')['data']
+                versions[pre_id] = (pre['attributes'].get('version'), pre['attributes'].get('platform'))
+            if versions[pre_id] == (self.version, 'IOS'):
+                matches.append(row)
+        require(len(matches) <= 1, 'Multiple builds match requested version and number')
+        return matches[0] if matches else None
+
+    def preflight(self, for_upload=False):
+        app = self.api.get(f'/v1/apps/{APP_ID}')['data']
+        require(app['attributes'].get('bundleId') == BUNDLE_ID, 'Apple app bundle identifier mismatch')
+        versions = self.versions()
+        previous = [row for row in versions if row['attributes'].get('versionString') == self.previous_version]
+        require(len(previous) == 1, 'Expected one previous public iOS version')
+        target = [row for row in versions if row['attributes'].get('versionString') == self.version]
+        require(len(target) <= 1, 'Multiple target App Store versions')
+        previous_state = previous[0]['attributes'].get('appStoreState')
+        require(previous_state in ('READY_FOR_SALE', 'READY_FOR_DISTRIBUTION') or
+                (previous_state == 'REPLACED_WITH_NEW_VERSION' and target and
+                 target[0]['attributes'].get('appStoreState') in SUBMITTED),
+                'Previous iOS version is not ready for distribution')
+        build = self.target_build()
+        all_builds = self.api.rows(query('/v1/builds', **{'filter[app]': APP_ID, 'limit': 200}))
+        codes = [int(row['attributes']['version']) for row in all_builds
+                 if str(row.get('attributes', {}).get('version', '')).isdigit()]
+        self.save(status='preflight_complete', previous_version_id=previous[0]['id'],
+                  version_id=target[0]['id'] if target else None,
+                  versions=[{'version': r['attributes'].get('versionString'),
+                             'state': r['attributes'].get('appStoreState')} for r in versions],
+                  maximum_uploaded_build=max(codes, default=0),
+                  exact_build_id=build['id'] if build else None,
+                  exact_build_state=build['attributes'].get('processingState') if build else None)
+        if for_upload:
+            require(build is None, 'Exact target build already exists; do not upload it again')
+            require(int(self.build_number) > max(codes, default=0), 'Build number does not exceed existing uploads')
+        return previous[0], target[0] if target else None
+
+    def wait_build(self):
+        deadline = self.clock() + self.wait_seconds
+        if isinstance(self.api, Client):
+            self.api.deadline = deadline
+        try:
+            while True:
+                build = self.target_build()
+                state = build['attributes'].get('processingState') if build else 'NOT_VISIBLE'
+                self.save(stage='apple_processing', status='waiting', exact_build_state=state,
+                          exact_build_id=build['id'] if build else None)
+                if state == 'VALID':
+                    require(build['attributes'].get('expired') is not True, 'Exact build has expired')
+                    return build
+                require(state not in ('FAILED', 'INVALID'), 'Apple rejected processing of the exact build')
+                if self.clock() >= deadline:
+                    raise ReleaseError('Apple build processing remains pending; rerun submission after processing')
+                self.sleep(min(30, max(0, deadline - self.clock())))
+        finally:
+            if isinstance(self.api, Client):
+                self.api.deadline = None
+
+    def metadata(self, version_id):
+        localizations = self.api.rows(f'/v1/appStoreVersions/{version_id}/appStoreVersionLocalizations?limit=200')
+        locales = {}
+        for localization in localizations:
+            locale = localization['attributes']['locale']
+            require(locale not in locales, 'Duplicate App Store localization')
+            sets = self.api.rows(f'/v1/appStoreVersionLocalizations/{localization["id"]}/appScreenshotSets?limit=200')
+            screenshots = {}
+            for screenshot_set in sets:
+                display = screenshot_set['attributes']['screenshotDisplayType']
+                require(display not in screenshots, 'Duplicate App Store screenshot display type')
+                screenshots[display] = asset_signature(self.api.rows(
+                    f'/v1/appScreenshotSets/{screenshot_set["id"]}/appScreenshots?limit=200'))
+            locales[locale] = {'row': localization, 'screenshots': screenshots}
+        try:
+            review = self.api.get(f'/v1/appStoreVersions/{version_id}/appStoreReviewDetail').get('data')
+        except APIError as error:
+            if error.status != 404:
+                raise
+            review = None
+        attachments = asset_signature(self.api.rows(
+            f'/v1/appStoreReviewDetails/{review["id"]}/appStoreReviewAttachments?limit=200')) if review else []
+        return {'locales': locales, 'review': review, 'attachments': attachments}
+
+    def preserve_metadata(self, source, target_id):
+        require(set(WHATS_NEW) <= set(source['locales']) <= set(WHATS_NEW) | set(NEW_LOCALES),
+                'Expected existing FR/EN/AR store localizations')
+        require(source['review'] is not None, 'Previous review information is missing')
+        expected_review = source['review']['attributes']
+        require(all(expected_review.get(field) for field in ('contactFirstName', 'contactLastName',
+                'contactEmail', 'contactPhone')), 'Previous review contact is incomplete')
+        if expected_review.get('demoAccountRequired'):
+            require(bool(expected_review.get('demoAccountName')) and bool(expected_review.get('demoAccountPassword')),
+                    'Previous demo account information is incomplete')
+        destination = self.metadata(target_id)
+        require(not (set(destination['locales']) - set(source['locales']) - set(NEW_LOCALES)),
+                'Target version has unexpected localizations')
+        for locale, original in source['locales'].items():
+            attributes = original['row']['attributes']
+            target = destination['locales'].get(locale)
+            if target is None:
+                # Apple normally inherits these; fill text only and verify the
+                # assets before submitting. Never invent or replace screenshots.
+                attrs = {'locale': locale, **{k: attributes[k] for k in LOCALIZATION_FIELDS if attributes.get(k) is not None}}
+                self.api.request('POST', '/v1/appStoreVersionLocalizations', resource(
+                    'appStoreVersionLocalizations', attributes=attrs,
+                    relationships={'appStoreVersion': relation('appStoreVersions', target_id)}))
+                destination = self.metadata(target_id)
+                target = destination['locales'][locale]
+            expected_screenshots = original['screenshots']
+            # Listings added through NEW_LOCALES show the primary screenshots.
+            require(any(expected_screenshots.values()) or locale in NEW_LOCALES,
+                    'Previous localization has no complete screenshots')
+            require(target['screenshots'] == expected_screenshots,
+                    'Inherited screenshots differ or are missing; supply verified originals before submission')
+            current = target['row']['attributes']
+            updates = {}
+            for field in LOCALIZATION_FIELDS:
+                expected, actual = expected_localization(locale, attributes, field), current.get(field)
+                if expected != actual:
+                    require(actual in (None, '', attributes.get(field)),
+                            'Inherited localization metadata differs; review before submission')
+                    updates[field] = expected
+            if current.get('whatsNew') != release_notes(locale):
+                updates['whatsNew'] = release_notes(locale)
+            if updates:
+                self.api.request('PATCH', f'/v1/appStoreVersionLocalizations/{target["row"]["id"]}',
+                                 resource('appStoreVersionLocalizations', target['row']['id'], updates))
+        if destination['review'] is None:
+            attrs = {k: expected_review[k] for k in (*REVIEW_FIELDS, 'notes') if expected_review.get(k) is not None}
+            self.api.request('POST', '/v1/appStoreReviewDetails', resource('appStoreReviewDetails', attributes=attrs,
+                             relationships={'appStoreVersion': relation('appStoreVersions', target_id)}))
+            destination = self.metadata(target_id)
+        review = destination['review']
+        updates = {}
+        for field in REVIEW_FIELDS:
+            expected, actual = expected_review.get(field), review['attributes'].get(field)
+            if expected != actual:
+                require(actual in (None, ''), 'Inherited private review information differs; review before submission')
+                updates[field] = expected
+        notes = (expected_review.get('notes') or '').rstrip()
+        inherited_attachments = destination['attachments']
+        require(all(item in source['attachments'] for item in inherited_attachments),
+                'Inherited review attachment does not match the previous version')
+        expected_notes = review_notes(notes, self.previous_version,
+                                      inherited_attachments == source['attachments'])
+        current_notes = review['attributes'].get('notes') or ''
+        require(current_notes in (notes, expected_review.get('notes') or '', expected_notes, ''),
+                'Target review notes differ; review before submission')
+        if current_notes != expected_notes:
+            updates['notes'] = expected_notes
+        if updates:
+            self.api.request('PATCH', f'/v1/appStoreReviewDetails/{review["id"]}',
+                             resource('appStoreReviewDetails', review['id'], updates))
+        added = self.add_locales(source, target_id)
+        # Re-read every text, ordered image checksum and private field before
+        # creating a review submission. Private fields are never added to report.
+        verified = self.metadata(target_id)
+        for locale in added:
+            row = verified['locales'][locale]['row']['attributes']
+            require(all(row.get(f) == v for f, v in new_locale_fields(locale, source).items()),
+                    'New localization readback failed')
+        for locale, original in source['locales'].items():
+            target = verified['locales'][locale]
+            require(target['screenshots'] == original['screenshots'], 'Screenshot preservation readback failed')
+            require(all(target['row']['attributes'].get(f) == expected_localization(locale, original['row']['attributes'], f)
+                        for f in LOCALIZATION_FIELDS), 'Localization preservation readback failed')
+            require(target['row']['attributes'].get('whatsNew') == release_notes(locale), 'Release notes readback failed')
+        require(all(verified['review']['attributes'].get(f) == expected_review.get(f) for f in REVIEW_FIELDS),
+                'Private review preservation readback failed')
+        require(verified['review']['attributes'].get('notes') == expected_notes, 'Review note readback failed')
+        require(verified['attachments'] == inherited_attachments, 'Review attachment preservation readback failed')
+        signature = {locale: item['screenshots'] for locale, item in verified['locales'].items()}
+        count = sum(len(rows) for item in signature.values() for rows in item.values())
+        self.save(stage='metadata_verified', locales=sorted(signature), screenshot_count=count,
+                  screenshot_signature=hashlib.sha256(json.dumps(signature, sort_keys=True).encode()).hexdigest(),
+                  review_attachment_count=len(inherited_attachments),
+                  historical_review_attachment_count=len(source['attachments']),
+                  historical_attachments_inherited=inherited_attachments == source['attachments'],
+                  previous_review_attachments_unchanged=True, review_contact_preserved=True,
+                  demo_account_preserved=True, privacy_unchanged=True,
+                  review_note_utf8_bytes=len(expected_notes.encode('utf-8')))
+
+    def add_locales(self, source, target_id):
+        """Create the App Store listings in NEW_LOCALES that the previous version lacks."""
+        added = sorted(set(NEW_LOCALES) - set(source['locales']))
+        if not added:
+            return []
+        infos = self.api.rows(query(f'/v1/apps/{APP_ID}/appInfos', limit=20))
+        editable = [row for row in infos
+                    if (row['attributes'].get('state') or row['attributes'].get('appStoreState')) in EDITABLE_INFO]
+        require(len(editable) == 1, 'Expected one editable App Store app info')
+        info_id = editable[0]['id']
+
+        def info_rows():
+            return {row['attributes']['locale']: row for row in
+                    self.api.rows(query(f'/v1/appInfos/{info_id}/appInfoLocalizations', limit=200))}
+
+        primary = info_rows().get('en-US')
+        require(primary is not None, 'Primary app info localization is missing')
+        privacy = primary['attributes'].get('privacyPolicyUrl')
+        destination = self.metadata(target_id)
+        for locale in added:
+            expected = new_locale_fields(locale, source)
+            current = destination['locales'].get(locale)
+            if current is None:
+                self.api.request('POST', '/v1/appStoreVersionLocalizations', resource(
+                    'appStoreVersionLocalizations', attributes={'locale': locale, **expected},
+                    relationships={'appStoreVersion': relation('appStoreVersions', target_id)}))
+            else:
+                attributes = current['row']['attributes']
+                updates = {f: v for f, v in expected.items() if attributes.get(f) != v}
+                require(all(attributes.get(f) in (None, '') for f in updates if f != 'whatsNew'),
+                        'Existing new localization differs; review before submission')
+                if updates:
+                    self.api.request('PATCH', f'/v1/appStoreVersionLocalizations/{current["row"]["id"]}',
+                                     resource('appStoreVersionLocalizations', current['row']['id'], updates))
+            names = {'name': NEW_LOCALES[locale]['name'], 'subtitle': NEW_LOCALES[locale]['subtitle']}
+            # Apple creates the app info localization itself, with the primary
+            # English name and subtitle, when the version localization is added.
+            row = info_rows().get(locale)
+            if row is None:
+                attributes = {'locale': locale, **names, **({'privacyPolicyUrl': privacy} if privacy else {})}
+                self.api.request('POST', '/v1/appInfoLocalizations', resource(
+                    'appInfoLocalizations', attributes=attributes,
+                    relationships={'appInfo': relation('appInfos', info_id)}))
+            elif any(row['attributes'].get(f) != v for f, v in names.items()):
+                require(all(row['attributes'].get(f) in (None, '', v, primary['attributes'].get(f))
+                            for f, v in names.items()),
+                        'Existing app name or subtitle differs; review before submission')
+                self.api.request('PATCH', f'/v1/appInfoLocalizations/{row["id"]}',
+                                 resource('appInfoLocalizations', row['id'], names))
+        readback = {locale: row['attributes'] for locale, row in info_rows().items()}
+        for locale in added:
+            require(readback.get(locale, {}).get('name') == NEW_LOCALES[locale]['name'] and
+                    readback[locale].get('subtitle') == NEW_LOCALES[locale]['subtitle'],
+                    'New app name or subtitle readback failed')
+        self.save(stage='locales_added', added_locales=added)
+        return added
+
+    def review_submission(self, target_id):
+        submissions = self.api.rows(f'/v1/apps/{APP_ID}/reviewSubmissions?filter[platform]=IOS&limit=200')
+        matching, empty = [], []
+        for submission in submissions:
+            state = submission['attributes'].get('state')
+            if state not in ('READY_FOR_REVIEW', 'WAITING_FOR_REVIEW', 'IN_REVIEW'):
+                continue
+            items = self.api.rows(f'/v1/reviewSubmissions/{submission["id"]}/items?include=appStoreVersion&limit=200')
+            ids = [related_id(item, 'appStoreVersion') for item in items]
+            if target_id in ids:
+                require(len(items) == 1, 'Review submission contains other items; review before submitting')
+                matching.append(submission)
+            elif items:
+                raise ReleaseError('Another review submission is active; do not replace it automatically')
+            elif state == 'READY_FOR_REVIEW':
+                empty.append(submission)
+        require(len(matching) <= 1 and len(empty) <= 1, 'Multiple active review submissions need inspection')
+        if matching:
+            return matching[0]
+        if empty:
+            submission = empty[0]
+        else:
+            submission = self.api.request('POST', '/v1/reviewSubmissions', resource('reviewSubmissions',
+                attributes={'platform': 'IOS'}, relationships={'app': relation('apps', APP_ID)}))['data']
+        self.save(stage='review_draft', review_submission_id=submission['id'])
+        self.api.request('POST', '/v1/reviewSubmissionItems', resource('reviewSubmissionItems', relationships={
+            'reviewSubmission': relation('reviewSubmissions', submission['id']),
+            'appStoreVersion': relation('appStoreVersions', target_id)}))
+        items = self.api.rows(f'/v1/reviewSubmissions/{submission["id"]}/items?include=appStoreVersion&limit=200')
+        require(len(items) == 1 and related_id(items[0], 'appStoreVersion') == target_id,
+                'Exact version review item readback failed')
+        return submission
+
+    def submit(self):
+        previous, target = self.preflight()
+        build = self.wait_build()
+        if target and target['attributes'].get('appStoreState') in SUBMITTED:
+            attached = self.api.get(f'/v1/appStoreVersions/{target["id"]}/build').get('data')
+            require(attached and attached['id'] == build['id'], 'Already submitted version uses another build')
+            self.save(stage='review_submission', status='already_submitted', version_id=target['id'],
+                      app_store_state=target['attributes']['appStoreState'])
+            return
+        source = self.metadata(previous['id'])
+        if target is None:
+            attributes = {'platform': 'IOS', 'versionString': self.version, 'releaseType': 'AFTER_APPROVAL'}
+            for field in ('copyright', 'usesIdfa'):
+                if previous['attributes'].get(field) is not None:
+                    attributes[field] = previous['attributes'][field]
+            target = self.api.request('POST', '/v1/appStoreVersions', resource('appStoreVersions',
+                        attributes=attributes, relationships={'app': relation('apps', APP_ID)}))['data']
+        self.save(stage='version_ready', version_id=target['id'])
+        require(target['attributes'].get('appStoreState') in EDITABLE, 'Target version is not editable')
+        require(target['attributes'].get('releaseType') == 'AFTER_APPROVAL',
+                'Target release settings differ; review before submission')
+        for field in ('copyright', 'usesIdfa'):
+            require(target['attributes'].get(field) == previous['attributes'].get(field),
+                    'Target version metadata differs from previous version')
+        self.preserve_metadata(source, target['id'])
+        attached = self.api.get(f'/v1/appStoreVersions/{target["id"]}/build').get('data')
+        if not attached or attached['id'] != build['id']:
+            require(target['attributes'].get('appStoreState') != 'READY_FOR_REVIEW',
+                    'Ready-for-review version uses another build; review before replacing it')
+            self.api.request('PATCH', f'/v1/appStoreVersions/{target["id"]}/relationships/build',
+                             {'data': {'type': 'builds', 'id': build['id']}})
+        attached = self.api.get(f'/v1/appStoreVersions/{target["id"]}/build').get('data')
+        require(attached and attached['id'] == build['id'], 'Exact build attachment readback failed')
+        submission = self.review_submission(target['id'])
+        self.save(stage='review_submission', review_submission_id=submission['id'])
+        if submission['attributes'].get('state') == 'READY_FOR_REVIEW':
+            self.api.request('PATCH', f'/v1/reviewSubmissions/{submission["id"]}',
+                             resource('reviewSubmissions', submission['id'], {'submitted': True}))
+        readback = self.api.get(f'/v1/reviewSubmissions/{submission["id"]}')['data']
+        version = self.api.get(f'/v1/appStoreVersions/{target["id"]}')['data']
+        state = readback['attributes'].get('state')
+        require(state in ('WAITING_FOR_REVIEW', 'IN_REVIEW', 'COMPLETE'), 'Apple submission is not confirmed')
+        self.save(status='submitted', submission_state=state,
+                  app_store_state=version['attributes'].get('appStoreState'), release_type='AFTER_APPROVAL')
+
+
+def self_test():
+    import unittest
+
+    class FakeClient:
+        def __init__(self, mismatched_images=False, build_version='1.0.28', inherit_attachments=True):
+            self.calls, self.target, self.attached, self.submission, self.items = [], None, None, None, []
+            self.previous = {'id': 'old', 'attributes': {'versionString': '1.0.27',
+                'appStoreState': 'READY_FOR_SALE', 'copyright': 'SalaTime', 'usesIdfa': False}}
+            self.build = {'id': 'build38', 'attributes': {'version': '38', 'processingState': 'VALID', 'expired': False},
+                          'relationships': {'preReleaseVersion': relation('preReleaseVersions', 'pre') }}
+            self.build_version, self.mismatched_images = build_version, mismatched_images
+            self.inherit_attachments = inherit_attachments
+            self.locales, self.reviews = {}, {}
+            self.infos = [{'id': 'info-live', 'attributes': {'state': 'READY_FOR_DISTRIBUTION'}},
+                          {'id': 'info-edit', 'attributes': {'state': 'PREPARE_FOR_SUBMISSION'}}]
+            self.info_locales = {info: [{'id': f'{info}-{locale}', 'attributes': {
+                'locale': locale, 'name': 'SalaTime', 'subtitle': 'Existing', 'privacyPolicyUrl': 'https://salatime.net/privacy-policy'}}
+                for locale in WHATS_NEW] for info in ('info-live', 'info-edit')}
+            for version in ('old', 'new'):
+                self.locales[version] = [ {'id': version + '-' + locale,
+                    'attributes': {'locale': locale, 'description': 'Existing description', 'keywords': 'existing',
+                                   'supportUrl': 'https://salatime.net', 'marketingUrl': None,
+                                   'promotionalText': None, 'whatsNew': 'Old release'}} for locale in WHATS_NEW]
+                self.reviews[version] = {'id': 'review-' + version, 'attributes': {
+                    **dict.fromkeys(REVIEW_FIELDS, 'PRIVATE-DO-NOT-LOG'), 'demoAccountRequired': True, 'notes': 'Existing notes'}}
+
+        def rows(self, path):
+            return self.get(path)['data']
+
+        def get(self, path):
+            return self.request('GET', path)
+
+        def request(self, method, path, payload=None):
+            self.calls.append((method, path))
+            base = urllib.parse.urlsplit(path).path
+            if method == 'GET':
+                if base == f'/v1/apps/{APP_ID}': return {'data': {'attributes': {'bundleId': BUNDLE_ID}}}
+                if base.endswith('/appStoreVersions'): return {'data': [self.previous] + ([self.target] if self.target else [])}
+                if base == '/v1/builds': return {'data': [self.build], 'included': [
+                    {'id': 'pre', 'type': 'preReleaseVersions', 'attributes': {'version': self.build_version, 'platform': 'IOS'}}]}
+                if base.endswith('/appStoreVersionLocalizations'):
+                    return {'data': copy.deepcopy(self.locales[base.split('/')[3]])}
+                if base == f'/v1/apps/{APP_ID}/appInfos': return {'data': copy.deepcopy(self.infos)}
+                if base.endswith('/appInfoLocalizations'):
+                    return {'data': copy.deepcopy(self.info_locales[base.split('/')[3]])}
+                if base.endswith('/appScreenshotSets') and base.split('/')[3].split('-', 1)[1] in NEW_LOCALES:
+                    return {'data': []}
+                if base.endswith('/appScreenshotSets'):
+                    return {'data': [{'id': base.split('/')[3], 'attributes': {'screenshotDisplayType': 'APP_IPHONE_65'}}]}
+                if base.endswith('/appScreenshots'):
+                    checksum = 'bad' if self.mismatched_images and '/new-' in base else 'abc123'
+                    return {'data': [{'attributes': {'fileName': 'existing.png', 'fileSize': 100,
+                        'sourceFileChecksum': checksum, 'assetDeliveryState': {'state': 'COMPLETE'}}}]}
+                if base.endswith('/appStoreReviewDetail'): return {'data': copy.deepcopy(self.reviews[base.split('/')[3]])}
+                if base.endswith('/appStoreReviewAttachments'):
+                    if base.split('/')[3] == 'review-new' and not self.inherit_attachments:
+                        return {'data': []}
+                    return {'data': [{'attributes': {'fileName': 'existing.pdf', 'fileSize': 10,
+                        'sourceFileChecksum': '123abc', 'assetDeliveryState': {'state': 'COMPLETE'}}}]}
+                if base.endswith('/build'):
+                    return {'data': {**self.build, 'id': self.attached} if self.attached else None}
+                if base.endswith('/reviewSubmissions'): return {'data': [self.submission] if self.submission else []}
+                if base.endswith('/items'):
+                    items = copy.deepcopy(self.items)
+                    if 'appStoreVersion' not in urllib.parse.parse_qs(
+                            urllib.parse.urlsplit(path).query).get('include', []):
+                        # Apple's default item response omits relationship data.
+                        for item in items: item['relationships'] = {}
+                    return {'data': items}
+                if base == '/v1/reviewSubmissions/submission': return {'data': self.submission}
+                if base == '/v1/appStoreVersions/new': return {'data': self.target}
+            elif method == 'POST':
+                if base == '/v1/appStoreVersions':
+                    self.target = {'id': 'new', 'attributes': {'appStoreState': 'PREPARE_FOR_SUBMISSION',
+                                   **payload['data']['attributes']}}
+                    return {'data': self.target}
+                if base == '/v1/appStoreVersionLocalizations':
+                    attributes = payload['data']['attributes']
+                    version = payload['data']['relationships']['appStoreVersion']['data']['id']
+                    row = {'id': f'{version}-{attributes["locale"]}', 'attributes': dict(attributes)}
+                    self.locales[version].append(row)
+                    english = next(r for r in self.info_locales['info-edit'] if r['attributes']['locale'] == 'en-US')
+                    if not any(r['attributes']['locale'] == attributes['locale'] for r in self.info_locales['info-edit']):
+                        self.info_locales['info-edit'].append({'id': 'info-edit-' + attributes['locale'], 'attributes': {
+                            **english['attributes'], 'locale': attributes['locale']}})
+                    return {'data': row}
+                if base == '/v1/appInfoLocalizations':
+                    attributes = payload['data']['attributes']
+                    info = payload['data']['relationships']['appInfo']['data']['id']
+                    if any(r['attributes']['locale'] == attributes['locale'] for r in self.info_locales[info]):
+                        raise APIError(409, b'ENTITY_ERROR.ATTRIBUTE.INVALID.DUPLICATE')
+                    row = {'id': f'{info}-{attributes["locale"]}', 'attributes': dict(attributes)}
+                    self.info_locales[info].append(row)
+                    return {'data': row}
+                if base == '/v1/reviewSubmissions':
+                    self.submission = {'id': 'submission', 'attributes': {'state': 'READY_FOR_REVIEW'}}
+                    return {'data': self.submission}
+                if base == '/v1/reviewSubmissionItems':
+                    self.items = [payload['data']]
+                    self.target['attributes']['appStoreState'] = 'READY_FOR_REVIEW'
+                    return {'data': self.items[0]}
+            elif method == 'PATCH':
+                if base.startswith('/v1/appInfoLocalizations/'):
+                    for row in self.info_locales['info-edit']:
+                        if row['id'] == payload['data']['id']: row['attributes'].update(payload['data']['attributes'])
+                    return {'data': payload['data']}
+                if base.startswith('/v1/appStoreVersionLocalizations/'):
+                    for row in self.locales['new']:
+                        if row['id'] == payload['data']['id']: row['attributes'].update(payload['data']['attributes'])
+                    return {'data': payload['data']}
+                if base == '/v1/appStoreReviewDetails/review-new':
+                    self.reviews['new']['attributes'].update(payload['data']['attributes'])
+                    return {'data': self.reviews['new']}
+                if base.endswith('/relationships/build'):
+                    self.attached = payload['data']['id']
+                    return {}
+                if base == '/v1/reviewSubmissions/submission':
+                    self.submission['attributes']['state'] = 'WAITING_FOR_REVIEW'
+                    self.target['attributes']['appStoreState'] = 'WAITING_FOR_REVIEW'
+                    return {'data': self.submission}
+            raise AssertionError(f'Unexpected fake operation {method} {base}')
+
+    class Checks(unittest.TestCase):
+        def test_next_version_preserves_36_screenshots_private_fields_and_historical_notes(self):
+            api = FakeClient(build_version='1.0.30', inherit_attachments=False)
+            api.previous['attributes']['versionString'] = '1.0.29'
+            api.build['id'] = 'build40'
+            api.build['attributes']['version'] = '40'
+            rating_notes = review_notes(self.historical_notes(), '1.0.27', False, RATING_REVIEW_NOTE)
+            previous_note = (RATING_REVIEW_NOTE + ' Language fix: account sync preserves the chosen language; '
+                             'the welcome email uses the language chosen at account creation (10 languages, including RTL).')
+            compact = review_notes(rating_notes, '1.0.28', True, previous_note)
+            api.reviews['old']['attributes']['notes'] = compact
+            api.reviews['new']['attributes']['notes'] = compact
+            historical = copy.deepcopy(api.reviews['old'])
+            original = api.request
+            def with_images(method, path, payload=None):
+                if method == 'GET' and urllib.parse.urlsplit(path).path.endswith('/appStoreReviewAttachments'):
+                    api.calls.append((method, path))
+                    return {'data': []}
+                result = original(method, path, payload)
+                if method == 'GET' and urllib.parse.urlsplit(path).path.endswith('/appScreenshots'):
+                    first = result['data'][0]
+                    result['data'] = []
+                    for index in range(12):
+                        row = copy.deepcopy(first)
+                        row['attributes']['fileName'] = f'existing-{index:02}.png'
+                        row['attributes']['sourceFileChecksum'] = hashlib.md5(str(index).encode()).hexdigest()
+                        result['data'].append(row)
+                return result
+            api.request = with_images
+            flow = Submission(api, '1.0.30', '40', previous_version='1.0.29')
+            flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            self.assertEqual(flow.report['screenshot_count'], 36)
+            self.assertEqual(api.attached, 'build40')
+            self.assertEqual(api.reviews['old'], historical)
+            self.assertTrue(all(api.reviews['new']['attributes'][field] == historical['attributes'][field]
+                                for field in REVIEW_FIELDS))
+            notes = api.reviews['new']['attributes']['notes']
+            self.assertLessEqual(len(notes.encode('utf-8')), 4000)
+            self.assertIn('Language fix:', notes)
+            self.assertIn('Reliability fix:', notes)
+            self.assertIn('Production error/hang reporting remains active', notes)
+            self.assertIn('Analytics: Firebase', notes)
+            self.assertIn('Usage statistics disables collection', notes)
+            self.assertIn('Update banner:', notes)
+            self.assertNotIn('all crashes', notes.lower())
+            self.assertIn('Historical demonstration context from version 1.0.27.', notes)
+            self.assertIn('remains attached to that previous version', notes)
+            self.assertIn('does not prove recalculation during real travel', notes)
+            for url in re.findall(r'https?://[^\s<>]+', compact): self.assertIn(url, notes)
+            self.assertTrue(all(method == 'GET' for method, path in api.calls
+                                if '/old/' in path or path.endswith('/review-old')))
+            before = len(api.calls)
+            resumed = Submission(api, '1.0.30', '40', previous_version='1.0.29')
+            resumed.submit()
+            self.assertEqual(resumed.report['status'], 'already_submitted')
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls[before:]))
+
+        def test_compact_public_notes_do_not_accumulate_another_history(self):
+            compact = review_notes(self.historical_notes(), '1.0.27', False, RATING_REVIEW_NOTE)
+            notes = review_notes(compact, '1.0.28', True)
+            self.assertLessEqual(len(notes.encode('utf-8')), 4000)
+            self.assertEqual(notes.count('Rating fix:'), 1)
+            self.assertEqual(notes.count('Language fix:'), 1)
+            self.assertEqual(notes.count('Reliability fix:'), 1)
+            self.assertEqual(notes.count('Historical demonstration context from version'), 1)
+            self.assertIn('version 1.0.27.', notes)
+            for url in re.findall(r'https?://[^\s<>]+', compact): self.assertIn(url, notes)
+
+        def test_new_locales_are_created_once_without_touching_published_info(self):
+            api = FakeClient()
+            published = copy.deepcopy(api.info_locales['info-live'])
+            flow = Submission(api, '1.0.28', '38')
+            flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            self.assertEqual(flow.report['added_locales'], sorted(NEW_LOCALES))
+            self.assertEqual(api.info_locales['info-live'], published)
+            names = {row['attributes']['locale']: row['attributes'] for row in api.info_locales['info-edit']}
+            versions = {row['attributes']['locale']: row['attributes'] for row in api.locales['new']}
+            for locale, listing in NEW_LOCALES.items():
+                self.assertEqual(names[locale]['name'], listing['name'])
+                self.assertEqual(names[locale]['privacyPolicyUrl'], 'https://salatime.net/privacy-policy')
+                self.assertEqual(versions[locale]['keywords'], listing['keywords'])
+                self.assertEqual(versions[locale]['whatsNew'], NEW_LOCALE_WHATS_NEW[locale])
+                self.assertEqual(versions[locale]['supportUrl'], 'https://salatime.net')
+            posts = [path for method, path in api.calls if method == 'POST' and 'Localizations' in path]
+            self.assertEqual(len(posts), len(NEW_LOCALES))
+            self.assertEqual(api.info_locales['info-edit'][0]['attributes']['name'], 'SalaTime')
+            for locale in WHATS_NEW:
+                self.assertEqual(versions[locale]['keywords'], KEYWORDS[locale])
+
+        def test_resume_after_apple_copied_english_names_for_a_new_locale(self):
+            api = FakeClient()
+            listing = NEW_LOCALES['es-ES']
+            api.locales['new'].append({'id': 'new-es-ES', 'attributes': {
+                'locale': 'es-ES', 'description': listing['description'], 'keywords': listing['keywords']}})
+            english = copy.deepcopy(api.info_locales['info-edit'][0]['attributes'])
+            api.info_locales['info-edit'].append({'id': 'info-edit-es-ES', 'attributes': {**english, 'locale': 'es-ES'}})
+            flow = Submission(api, '1.0.28', '38')
+            flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            names = {row['attributes']['locale']: row['attributes'] for row in api.info_locales['info-edit']}
+            self.assertEqual(names['es-ES']['name'], listing['name'])
+            self.assertEqual(names['es-ES']['subtitle'], listing['subtitle'])
+            versions = {row['attributes']['locale']: row['attributes'] for row in api.locales['new']}
+            self.assertEqual(versions['es-ES']['promotionalText'], listing['promotionalText'])
+            self.assertFalse([path for method, path in api.calls
+                              if method == 'POST' and path.endswith('/appInfoLocalizations')])
+
+        def test_next_version_keeps_added_locales_without_their_own_screenshots(self):
+            api = FakeClient()
+            for version in ('old', 'new'):
+                for locale, listing in NEW_LOCALES.items():
+                    api.locales[version].append({'id': f'{version}-{locale}', 'attributes': {
+                        'locale': locale, 'description': listing['description'], 'keywords': listing['keywords'],
+                        'promotionalText': listing['promotionalText'], 'supportUrl': 'https://salatime.net',
+                        'marketingUrl': None, 'whatsNew': 'Old release'}})
+            for info in ('info-live', 'info-edit'):
+                for locale, listing in NEW_LOCALES.items():
+                    api.info_locales[info].append({'id': f'{info}-{locale}', 'attributes': {
+                        'locale': locale, 'name': listing['name'], 'subtitle': listing['subtitle']}})
+            flow = Submission(api, '1.0.28', '38')
+            flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            versions = {row['attributes']['locale']: row['attributes'] for row in api.locales['new']}
+            for locale, listing in NEW_LOCALES.items():
+                self.assertEqual(versions[locale]['whatsNew'], NEW_LOCALE_WHATS_NEW[locale])
+                self.assertEqual(versions[locale]['keywords'], listing['keywords'])
+            self.assertFalse([path for method, path in api.calls if method == 'POST' and 'Localizations' in path])
+
+        def test_new_listing_text_fits_apple_limits(self):
+            self.assertEqual(set(NEW_LOCALES), set(NEW_LOCALE_WHATS_NEW))
+            self.assertFalse(set(NEW_LOCALES) & set(WHATS_NEW))
+            for locale, listing in NEW_LOCALES.items():
+                self.assertLessEqual(len(listing['name']), 30, locale)
+                self.assertLessEqual(len(listing['subtitle']), 30, locale)
+                self.assertLessEqual(len(listing['keywords'].encode('utf-8')), 100, locale)
+                self.assertLessEqual(len(listing['promotionalText']), 170, locale)
+                self.assertLessEqual(len(listing['description']), 4000, locale)
+                self.assertLessEqual(len(NEW_LOCALE_WHATS_NEW[locale]), 4000, locale)
+                parts = listing['keywords'].split(',')
+                self.assertEqual(len(parts), len(set(parts)), locale)
+                shown = set(re.findall(r'\w+', (listing['name'] + ' ' + listing['subtitle']).lower()))
+                self.assertFalse(shown & set(parts), (locale, shown & set(parts)))
+                self.assertIn('https://salatime.net/privacy-policy', listing['description'])
+
+        def test_keywords_fit_apple_limit_and_skip_name_words(self):
+            names = {'en-US': 'SalaTime Prayer Times Quran Adhan Qibla daily Athkar',
+                     'fr-FR': 'SalaTime Prière et Coran Adhan Qibla et Athkar'}
+            for locale, words in KEYWORDS.items():
+                self.assertLessEqual(len(words.encode('utf-8')), 100)
+                parts = words.split(',')
+                self.assertEqual(len(parts), len(set(parts)))
+                self.assertTrue(all(part and part == part.strip() for part in parts))
+                taken = set(names.get(locale, '').lower().split())
+                self.assertFalse(taken & set(parts), locale)
+            self.assertEqual(expected_localization('en-US', {'keywords': 'old'}, 'keywords'), KEYWORDS['en-US'])
+            self.assertEqual(expected_localization('de-DE', {'keywords': 'old'}, 'keywords'), 'old')
+            self.assertEqual(expected_localization('en-US', {'description': 'd'}, 'description'), 'd')
+
+        def test_reliability_notes_fit_previous_public_utf8_budget(self):
+            previous_note = (RATING_REVIEW_NOTE + ' Language fix: account sync preserves the chosen language; '
+                             'the welcome email uses the language chosen at account creation (10 languages, including RTL).')
+            source = review_notes(self.historical_notes(), '1.0.27', False, previous_note)
+            # The accepted build-39 receipt records 3,789 UTF-8 bytes. Pad a
+            # retained demo paragraph to that budget without using private data.
+            padding = 3789 - len(source.encode('utf-8'))
+            self.assertGreater(padding, 0)
+            source = source.replace('No simulated GPS or fabricated app UI.',
+                                    'x' * padding + 'No simulated GPS or fabricated app UI.')
+            self.assertEqual(len(source.encode('utf-8')), 3789)
+            notes = review_notes(source, '1.0.29', True)
+            self.assertLessEqual(len(notes.encode('utf-8')), 4000)
+            self.assertEqual(notes.count('Reliability fix:'), 1)
+            self.assertIn('Production error/hang reporting remains active', notes)
+            self.assertIn('does not prove recalculation during real travel', notes)
+            for url in re.findall(r'https?://[^\s<>]+', source): self.assertIn(url, notes)
+
+        def historical_notes(self):
+            return ('SalaTime 1.0.27: previous release history. ' + 'Historical release summary. ' * 85 +
+                    '\n\nNEW PHYSICAL IPHONE DEMO (51 seconds, build 35)\n'
+                    'https://salatime.net/review/existing-demo.mp4\n'
+                    'Recorded on a physical iPhone with pauses cut and no audio. '
+                    'The system permission dialog and an actual journey were not captured; '
+                    'this video does not prove recalculation during real travel. '
+                    'No simulated GPS or fabricated app UI.\n\n'
+                    'LOCATION (5.1.1 AND 2.5.4)\nReal-travel validation is not claimed complete.\n\n'
+                    'EXISTING ACCOUNT/FEATURE DEMO\n'
+                    'The attached SalaTime-AppReview-demo.mp4 predates build 30 and does not '
+                    'demonstrate later travel/countdown/timezone fixes.\n\n'
+                    'ACCESS AND ACCOUNTS\nCore features need no account.\n'
+                    'Settings > Account: use the verified demo account in dedicated App Review '
+                    'sign-in fields; no email code required. Apple/Google login is optional.\n'
+                    'Create account: verify emailed code. Sign out/sign in on account page. '
+                    'Delete account: Settings > Account > Delete account, enter password if requested. '
+                    'Social accounts may require recent login. Deletion removes account/cloud data.\n\n'
+                    'CONTENT AND SERVICES\nPermission: https://www.mp3quran.net/eng/privacy\n'
+                    'Terms: https://quranenc.com/en/home/api\nSupport: https://salatime.net/support')
+
+        def test_compact_notes_preserve_auth_demo_links_and_limitations(self):
+            source = self.historical_notes()
+            notes = review_notes(source, '1.0.27', False)
+            self.assertLessEqual(len(notes.encode('utf-8')), 4000)
+            self.assertIn('51 seconds, build 35', notes)
+            self.assertIn('does not prove recalculation during real travel', notes)
+            self.assertIn('predates build 30', notes)
+            self.assertIn('remains attached to that previous version', notes)
+            for url in re.findall(r'https?://[^\s<>]+', source):
+                self.assertIn(url, notes)
+            for line in source.splitlines():
+                if line.startswith(('Settings > Account:', 'Create account:')):
+                    self.assertIn(line, notes)
+            self.assertIn('30-day interval, maximum 3 attempts', notes)
+            self.assertNotIn('Historical release summary.', notes)
+
+        def test_utf8_byte_limit_rejects_without_silent_truncation(self):
+            source = '\u00e9' * 1900
+            self.assertLess(len(source), 4000)
+            with self.assertRaisesRegex(ReleaseError, 'UTF-8 byte limit'):
+                review_notes(source, '1.0.27', False)
+            self.assertEqual(source, '\u00e9' * 1900)
+
+        def test_created_version_resumes_from_long_inherited_notes(self):
+            api = FakeClient(inherit_attachments=False)
+            original = self.historical_notes()
+            api.reviews['old']['attributes']['notes'] = original
+            api.reviews['new']['attributes']['notes'] = original
+            api.target = {'id': 'new', 'attributes': {'versionString': '1.0.28', 'platform': 'IOS',
+                'appStoreState': 'PREPARE_FOR_SUBMISSION', 'releaseType': 'AFTER_APPROVAL',
+                'copyright': 'SalaTime', 'usesIdfa': False}}
+            flow = Submission(api, '1.0.28', '38'); flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            self.assertEqual(api.reviews['old']['attributes']['notes'], original)
+            self.assertEqual(api.reviews['new']['attributes']['notes'], review_notes(original, '1.0.27', False))
+            self.assertNotIn(('POST', '/v1/appStoreVersions'), api.calls)
+            self.assertTrue(all(api.reviews['new']['attributes'][field] == api.reviews['old']['attributes'][field]
+                                for field in REVIEW_FIELDS))
+
+        def test_es256_signature_is_verified_by_openssl(self):
+            with tempfile.TemporaryDirectory() as directory:
+                key = subprocess.run(['openssl', 'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-256'],
+                                     capture_output=True, check=True).stdout
+                signer = TokenSigner(key, 'ABCDEFGHIJ', '00000000-0000-0000-0000-000000000000')
+                try:
+                    token = signer.token()
+                    header, claims, signature = token.split('.')
+                    raw = base64.urlsafe_b64decode(signature + '==')
+                    self.assertEqual(len(raw), 64)
+                    self.assertEqual(json.loads(base64.urlsafe_b64decode(claims + '=='))['aud'], 'appstoreconnect-v1')
+                    integers = []
+                    for value in (raw[:32], raw[32:]):
+                        value = value.lstrip(b'\x00') or b'\x00'
+                        if value[0] & 0x80: value = b'\x00' + value
+                        integers.append(b'\x02' + bytes([len(value)]) + value)
+                    encoded = b''.join(integers)
+                    sig = Path(directory) / 'signature.der'; sig.write_bytes(b'\x30' + bytes([len(encoded)]) + encoded)
+                    pub = Path(directory) / 'public.pem'
+                    pub.write_bytes(subprocess.run(['openssl', 'pkey', '-in', str(signer.path), '-pubout'],
+                                                   capture_output=True, check=True).stdout)
+                    result = subprocess.run(['openssl', 'dgst', '-sha256', '-verify', str(pub), '-signature', str(sig)],
+                                            input=f'{header}.{claims}'.encode(), capture_output=True)
+                    self.assertEqual(result.returncode, 0)
+                finally: signer.close()
+
+        def test_read_only_preflight_and_duplicate_upload_guard(self):
+            api = FakeClient(); flow = Submission(api, '1.0.28', '38')
+            flow.preflight()
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls))
+            self.assertEqual(flow.report['maximum_uploaded_build'], 38)
+            with self.assertRaisesRegex(ReleaseError, 'already exists'): flow.preflight(for_upload=True)
+
+        def test_exact_marketing_version_required(self):
+            api = FakeClient(build_version='1.0.27')
+            with self.assertRaisesRegex(ReleaseError, 'processing remains pending'):
+                Submission(api, '1.0.28', '38', wait_seconds=0).submit()
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls))
+
+        def test_source_version_guard_applies_to_resuming_submission(self):
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'pubspec.yaml'
+                path.write_text('name: salatime\nversion: 1.0.28+33\n')
+                verify_source_version('1.0.28', path)
+                with self.assertRaisesRegex(ReleaseError, 'Local Flutter version'):
+                    verify_source_version('1.0.27', path)
+
+        def test_submit_preserves_metadata_and_rerun_is_idempotent(self):
+            api = FakeClient(); flow = Submission(api, '1.0.28', '38')
+            original = copy.deepcopy(api.reviews['old'])
+            flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            self.assertEqual(flow.report['screenshot_count'], 3)
+            self.assertNotIn('PRIVATE-DO-NOT-LOG', json.dumps(flow.report))
+            self.assertEqual(api.reviews['old'], original)
+            before = len(api.calls)
+            rerun = Submission(api, '1.0.28', '38'); rerun.submit()
+            self.assertEqual(rerun.report['status'], 'already_submitted')
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls[before:]))
+
+        def test_missing_inherited_images_blocks_review_submission(self):
+            api = FakeClient(mismatched_images=True)
+            with self.assertRaisesRegex(ReleaseError, 'screenshots differ'):
+                Submission(api, '1.0.28', '38').submit()
+            self.assertFalse(any(method == 'POST' and path == '/v1/reviewSubmissions' for method, path in api.calls))
+
+        def test_published_version_rerun_accepts_replaced_previous_version(self):
+            api = FakeClient(); Submission(api, '1.0.28', '38').submit()
+            api.previous['attributes']['appStoreState'] = 'REPLACED_WITH_NEW_VERSION'
+            api.target['attributes']['appStoreState'] = 'READY_FOR_SALE'
+            before = len(api.calls)
+            flow = Submission(api, '1.0.28', '38'); flow.submit()
+            self.assertEqual(flow.report['status'], 'already_submitted')
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls[before:]))
+            api.attached = 'another-build'
+            with self.assertRaisesRegex(ReleaseError, 'another build'):
+                Submission(api, '1.0.28', '38').submit()
+
+        def test_replaced_previous_version_cannot_prepare_another_submission(self):
+            api = FakeClient()
+            api.previous['attributes']['appStoreState'] = 'REPLACED_WITH_NEW_VERSION'
+            with self.assertRaisesRegex(ReleaseError, 'not ready for distribution'):
+                Submission(api, '1.0.28', '38').submit()
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls))
+
+        def test_historical_attachment_stays_on_previous_version(self):
+            api = FakeClient(inherit_attachments=False)
+            original = copy.deepcopy(api.reviews['old'])
+            flow = Submission(api, '1.0.28', '38'); flow.submit()
+            self.assertEqual(flow.report['status'], 'submitted')
+            self.assertFalse(flow.report['historical_attachments_inherited'])
+            self.assertEqual(flow.report['review_attachment_count'], 0)
+            self.assertEqual(api.reviews['old'], original)
+            self.assertIn('remains attached to that previous version', api.reviews['new']['attributes']['notes'])
+            self.assertFalse(any(method != 'GET' and 'appStoreReviewAttachments' in path for method, path in api.calls))
+
+        def test_ready_review_draft_resumes_without_reattaching_build(self):
+            api = FakeClient(); first = Submission(api, '1.0.28', '38')
+            old_request = api.request
+            failed = False
+            def interrupt(method, path, payload=None):
+                nonlocal failed
+                if method == 'PATCH' and path == '/v1/reviewSubmissions/submission' and not failed:
+                    failed = True
+                    raise ReleaseError('Simulated interruption before submission')
+                return old_request(method, path, payload)
+            api.request = interrupt
+            with self.assertRaisesRegex(ReleaseError, 'Simulated interruption'): first.submit()
+            self.assertEqual(api.target['attributes']['appStoreState'], 'READY_FOR_REVIEW')
+            before = len(api.calls)
+            rerun = Submission(api, '1.0.28', '38'); rerun.submit()
+            self.assertEqual(rerun.report['status'], 'submitted')
+            self.assertFalse(any(method == 'POST' or path.endswith('/relationships/build')
+                                 for method, path in api.calls[before:]))
+
+        def test_existing_draft_items_require_include_and_resume_without_post(self):
+            api = FakeClient()
+            api.target = {'id': 'new', 'attributes': {'versionString': '1.0.28', 'platform': 'IOS',
+                'appStoreState': 'READY_FOR_REVIEW', 'releaseType': 'AFTER_APPROVAL',
+                'copyright': 'SalaTime', 'usesIdfa': False}}
+            api.submission = {'id': 'submission', 'attributes': {'state': 'READY_FOR_REVIEW'}}
+            api.items = [resource('reviewSubmissionItems', 'existing-item', relationships={
+                'appStoreVersion': relation('appStoreVersions', 'new')})['data']]
+            omitted = api.get('/v1/reviewSubmissions/submission/items?limit=200')['data']
+            self.assertIsNone(related_id(omitted[0], 'appStoreVersion'))
+            before = len(api.calls)
+            result = Submission(api, '1.0.28', '38').review_submission('new')
+            self.assertEqual(result['id'], 'submission')
+            self.assertTrue(all(method == 'GET' for method, _ in api.calls[before:]))
+            self.assertTrue(any('include=appStoreVersion' in path for _, path in api.calls[before:]))
+
+        def test_api_error_never_logs_private_details_and_http_host_guard(self):
+            error = APIError(422, json.dumps({'errors': [{'code': 'ENTITY_ERROR',
+                            'detail': 'PRIVATE-PASSWORD'}]}).encode())
+            self.assertNotIn('PRIVATE-PASSWORD', str(error))
+            client = Client(None)
+            with self.assertRaisesRegex(ReleaseError, 'Unexpected'):
+                client.get('https://unrelated.example/v1/builds')
+            with self.assertRaisesRegex(ReleaseError, 'Invalid ES256'):
+                der_signature_to_raw(b'invalid')
+            with self.assertRaisesRegex(ReleaseError, 'redirects'):
+                NoRedirect().redirect_request(None, None, 302, '', {}, 'https://unrelated.example')
+
+        def test_http_get_retries_but_post_is_not_repeated(self):
+            class Signer:
+                def token(self): return 'PRIVATE-JWT'
+            attempts = []
+            def opener(request, timeout):
+                attempts.append(request.method)
+                if len(attempts) < 2:
+                    raise urllib.error.HTTPError(request.full_url, 503, 'error', {}, io.BytesIO(b'PRIVATE'))
+                class Response:
+                    def __enter__(self): return self
+                    def __exit__(self, *args): return None
+                    def read(self): return b'{"data": []}'
+                return Response()
+            client = Client(Signer(), opener=opener, sleep=lambda _: None)
+            self.assertEqual(client.get('/v1/builds')['data'], [])
+            self.assertEqual(attempts, ['GET', 'GET'])
+            attempts.clear()
+            with self.assertRaises(APIError): client.request('POST', '/v1/reviewSubmissions', {})
+            self.assertEqual(attempts, ['POST'])
+
+    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Checks))
+    require(result.wasSuccessful(), 'App Store submission self-tests failed')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--preflight', action='store_true')
+    mode.add_argument('--submit', action='store_true')
+    mode.add_argument('--self-test', action='store_true')
+    parser.add_argument('--for-upload', action='store_true')
+    parser.add_argument('--version', default='1.0.35')
+    parser.add_argument('--previous-version', default='1.0.34')
+    parser.add_argument('--build-number', default='40')
+    parser.add_argument('--wait-seconds', type=int, default=1200)
+    parser.add_argument('--receipt', type=Path, default=Path('build/ios/app-store-submission.json'))
+    args = parser.parse_args()
+    os.umask(0o077)
+    if args.self_test:
+        self_test()
+        return
+    require(not args.for_upload or args.preflight, '--for-upload requires --preflight')
+    signer, flow = None, None
+    try:
+        verify_source_version(args.version)
+        key_id = os.environ.get('ASC_KEY_ID', '')
+        material = os.environ.get('ASC_API_KEY_P8')
+        if material:
+            private_key = material.encode()
+        else:
+            directory = os.environ.get('API_PRIVATE_KEYS_DIR', '')
+            require(bool(directory), 'Apple API signing key is unavailable')
+            private_key = (Path(directory) / f'AuthKey_{key_id}.p8').read_bytes()
+        signer = TokenSigner(private_key, key_id, os.environ.get('ASC_ISSUER_ID', ''))
+        flow = Submission(Client(signer), args.version, args.build_number,
+                          args.previous_version, args.wait_seconds, receipt=args.receipt)
+        if args.submit:
+            flow.submit()
+        else:
+            flow.preflight(for_upload=args.for_upload)
+        print(json.dumps(flow.report, ensure_ascii=False, indent=2))
+    except Exception as error:
+        message = str(error) if isinstance(error, ReleaseError) else 'Local submission operation failed: ' + type(error).__name__
+        if flow:
+            flow.save(status='blocked', error=message)
+        else:
+            args.receipt.parent.mkdir(parents=True, exist_ok=True)
+            args.receipt.write_text(json.dumps({'status': 'blocked', 'stage': 'authentication', 'error': message}) + '\n')
+        raise SystemExit(message) from None
+    finally:
+        if signer:
+            signer.close()
+
+
+if __name__ == '__main__':
+    main()
