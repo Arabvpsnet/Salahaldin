@@ -38,7 +38,7 @@ jobs:
           flutter analyze --no-pub
           flutter build apk --debug --no-pub
       - name: Upload debug APK for QA
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: salahaldin-android-debug-qa
           path: mobile/build/app/outputs/flutter-apk/app-debug.apk
