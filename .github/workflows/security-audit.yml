@@ -26,7 +26,7 @@ jobs:
       - name: Audit installed TV packages from lockfile
         working-directory: tv
         run: npm audit --package-lock-only --audit-level=high --json > ../tv-npm-audit.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: tv-dependency-audit
@@ -41,7 +41,7 @@ jobs:
       - name: Audit backend JS packages from lockfile
         working-directory: server
         run: npm audit --package-lock-only --audit-level=high --json > ../server-npm-audit.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: server-js-dependency-audit
@@ -54,7 +54,7 @@ jobs:
       - name: Audit locked composer dependencies
         working-directory: server
         run: composer audit --locked --format=json > ../composer-audit.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: composer-dependency-audit
