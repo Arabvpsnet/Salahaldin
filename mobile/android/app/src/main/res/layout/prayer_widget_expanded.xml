@@ -14,7 +14,7 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="18dp" android:orientation="horizontal" android:gravity="center_vertical">
         <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/prayer_widget_moon" android:importantForAccessibility="no" />
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp"
-            android:text="SalaTime" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#2F5233" android:includeFontPadding="false" />
+            android:text="صلاح الدين" android:textSize="12sp" android:fontFamily="sans-serif-medium" android:textColor="#2F5233" android:includeFontPadding="false" />
         <TextView android:id="@+id/widget_city" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="12dp"
             android:gravity="end" android:textColor="#4C7A50" android:textSize="11sp" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
     </LinearLayout>

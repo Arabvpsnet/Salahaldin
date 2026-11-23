@@ -246,7 +246,7 @@ class PrayerTimesShareCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'SalaTime',
+                      'صلاح الدين',
                       style: theme.textTheme.headlineSmall!.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,

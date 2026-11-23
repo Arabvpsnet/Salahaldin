@@ -67,11 +67,23 @@ class SettingService extends BaseService
     {
         $ttl = max(1, (int) config('performance.settings_cache_ttl', 600));
 
-        return Cache::remember(
+        $settings = Cache::remember(
             ApplicationCache::settingsKey($context),
             $ttl,
             fn () => resolve(SettingRepository::class)->getFormattedSettings($context)
         );
+
+        $nameKey = match ($context) {
+            'app' => 'company_name',
+            'landing' => 'app_name',
+            default => null,
+        };
+
+        if ($nameKey !== null && in_array($settings[$nameKey] ?? null, ['SalaTime', 'Salahaldin'], true)) {
+            $settings[$nameKey] = config('seo.site_name');
+        }
+
+        return $settings;
     }
 
     public function setDefaultSettings($key, $value, $context = 'mail', $settingable_type = null, $settingable_id = null)

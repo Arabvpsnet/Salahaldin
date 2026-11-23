@@ -13,7 +13,7 @@
     </script>
 
     @php
-        $seoTitle   = !empty($s['seo_title'])       ? $s['seo_title']       : (($s['app_name'] ?? 'SalaTime') . ' - ' . ($s['hero_title'] ?? 'Your Complete') . ' ' . ($s['hero_subtitle'] ?? 'Islamic Companion'));
+        $seoTitle   = !empty($s['seo_title'])       ? $s['seo_title']       : (($s['app_name'] ?? 'صلاح الدين') . ' - ' . ($s['hero_title'] ?? 'Your Complete') . ' ' . ($s['hero_subtitle'] ?? 'Islamic Companion'));
         $seoDesc    = !empty($s['seo_description'])  ? $s['seo_description']  : Str::limit($s['hero_description'] ?? '', 160);
         $ogTitle    = !empty($s['seo_og_title'])     ? $s['seo_og_title']     : $seoTitle;
         $ogDesc     = !empty($s['seo_og_description'])  ? $s['seo_og_description']  : $seoDesc;
@@ -29,14 +29,14 @@
                     '@type' => 'WebSite',
                     '@id' => $canonical . '#website',
                     'url' => $canonical,
-                    'name' => $s['app_name'] ?? 'SalaTime',
+                    'name' => $s['app_name'] ?? 'صلاح الدين',
                     'description' => $seoDesc,
                     'inLanguage' => 'en',
                 ],
                 [
                     '@type' => 'Organization',
                     '@id' => $canonical . '#organization',
-                    'name' => $s['app_name'] ?? 'SalaTime',
+                    'name' => $s['app_name'] ?? 'صلاح الدين',
                     'url' => $canonical,
                     'logo' => asset($s['web_logo'] ?? 'assets/img/logo.png'),
                     'sameAs' => [$s['play_store_url'] ?? config('seo.play_store_url')],
@@ -44,7 +44,7 @@
                 [
                     '@type' => 'MobileApplication',
                     '@id' => $canonical . '#android-app',
-                    'name' => $s['app_name'] ?? 'SalaTime',
+                    'name' => $s['app_name'] ?? 'صلاح الدين',
                     'description' => $seoDesc,
                     'applicationCategory' => 'LifestyleApplication',
                     'operatingSystem' => 'Android',
@@ -71,7 +71,7 @@
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_US">
-    <meta property="og:site_name" content="{{ $s['app_name'] ?? 'SalaTime' }}">
+    <meta property="og:site_name" content="{{ $s['app_name'] ?? 'صلاح الدين' }}">
     <meta property="og:title" content="{{ $ogTitle }}">
     <meta property="og:description" content="{{ $ogDesc }}">
     @if($ogImage)
@@ -80,7 +80,7 @@
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="SalaTime Android app for prayer times, Quran and Qibla">
+    <meta property="og:image:alt" content="صلاح الدين Android app for prayer times, Quran and Qibla">
     @endif
     <meta property="og:url" content="{{ $canonical }}">
 
@@ -89,7 +89,7 @@
     <meta name="twitter:description" content="{{ $twDesc }}">
     @if($ogImage)
     <meta name="twitter:image" content="{{ $ogImage }}">
-    <meta name="twitter:image:alt" content="SalaTime Android app for prayer times, Quran and Qibla">
+    <meta name="twitter:image:alt" content="صلاح الدين Android app for prayer times, Quran and Qibla">
     @endif
 
     <script type="application/ld+json">{!! json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
@@ -1576,7 +1576,7 @@
                             </div>
                             <div class="flex items-center gap-2 ml-2">
                                 <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs" style="background: linear-gradient(135deg, var(--gold), var(--gold-light));">🤖</div>
-                                <span class="text-white/70 text-sm font-medium">SalaTime AI</span>
+                                <span class="text-white/70 text-sm font-medium">صلاح الدين AI</span>
                             </div>
                             <div class="ml-auto flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block"></span>
@@ -1590,7 +1590,7 @@
                                 <div class="w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center text-xs mt-0.5" style="background: linear-gradient(135deg, var(--gold), var(--gold-light));">🤖</div>
                                 <div class="rounded-xl rounded-tl-none px-4 py-3 text-sm max-w-xs leading-relaxed" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.80);">
                                     <span class="font-arabic text-base block mb-1" style="color:var(--gold);">السلام عليكم ورحمة الله</span>
-                                    I'm SalaTime AI. Ask me anything about Islam — Quran, Hadith, prayer, fiqh, duas, or Islamic lifestyle!
+                                    I'm صلاح الدين AI. Ask me anything about Islam — Quran, Hadith, prayer, fiqh, duas, or Islamic lifestyle!
                                 </div>
                             </div>
                         </div>
@@ -1931,16 +1931,16 @@
                 'footer.copyright':'Islamic App. All rights reserved.','footer.built':'Built with Flutter • Laravel • Love ❤️',
                 // Default dynamic content (DB values override these in English via data-i18n-en)
                 'hero.badge':'Available on iOS & Android','hero.title':'Your Complete','hero.subtitle':'Islamic Companion',
-                'hero.description':'SalaTime brings you the full Quran, prayer times, hadith, dua, Qibla, Zakat calculator, AI Islamic chat, and 40+ languages — everything you need for your daily Islamic life in one beautiful app.',
+                'hero.description':'صلاح الدين brings you the full Quran, prayer times, hadith, dua, Qibla, Zakat calculator, AI Islamic chat, and 40+ languages — everything you need for your daily Islamic life in one beautiful app.',
                 'features.title':'Everything You Need','features.desc':'A complete Islamic lifestyle companion packed with features that help you stay connected to your faith every day.',
                 'quran.title':'Full Quran Reading','quran.highlight':'Experience','quran.description':'Read, listen, and understand the Holy Quran with multi-language translations, phonetic transliteration, and beautiful Arabic typography.',
                 'prayer.title':'Never Miss','prayer.highlight':'A Prayer','prayer.description':'Get accurate prayer times for your location with beautiful Adhan notifications. Find the Qibla direction with an improved compass.',
                 'ai.title':'Powered by Artificial Intelligence','ai.description':'Get intelligent Islamic guidance at your fingertips — anytime, anywhere.',
                 'dhikr.title':'Dhikr, Dua & Remembrance','dhikr.description':'Stay connected to Allah with our comprehensive collection of duas and dhikr for every occasion.',
-                'download.title':'Start Your Islamic','download.highlight':'Journey Today','download.description':'Join hundreds of thousands of Muslims worldwide who use SalaTime for their daily Islamic needs. Download for free today.',
+                'download.title':'Start Your Islamic','download.highlight':'Journey Today','download.description':'Join hundreds of thousands of Muslims worldwide who use صلاح الدين for their daily Islamic needs. Download for free today.',
                 'footer.description':'Your complete Islamic companion app. Bringing the beauty of Islam to your fingertips with modern technology.',
                 'nav.donate':'Donate',
-                'donate.title':'Support Our Mission','donate.desc':'Your generosity keeps SalaTime free for millions of Muslims worldwide. Every contribution helps us maintain, improve, and expand Islamic knowledge.',
+                'donate.title':'Support Our Mission','donate.desc':'Your generosity keeps صلاح الدين free for millions of Muslims worldwide. Every contribution helps us maintain, improve, and expand Islamic knowledge.',
                 'donate.verse_trans':'"The example of those who spend in the way of Allah is like a grain that sprouts seven ears" — Al-Baqarah 2:261',
                 'donate.why1_title':'Free App Forever','donate.why1_desc':'Keeps the app free for millions of Muslims globally.',
                 'donate.why2_title':'Global Infrastructure','donate.why2_desc':'Funds servers, CDN, and 24/7 uptime for all users.',
@@ -1972,7 +1972,7 @@
                 'ai_chat.desc':'Get instant, knowledgeable answers about Islam — from Quran & Hadith to prayer, fiqh, and daily Muslim life. Lightning-fast AI, right here on the page.',
                 'ai_chat.sub_title':'Sub-second Responses','ai_chat.sub_desc':'Groq LPU technology delivers answers in milliseconds',
                 'ai_chat.hadith_title':'Quran & Hadith Referenced','ai_chat.hadith_desc':'Answers include Arabic text and authentic source citations',
-                'ai_chat.app_title':'Full Experience in the App','ai_chat.app_desc':'Chat history, offline access, and more inside SalaTime',
+                'ai_chat.app_title':'Full Experience in the App','ai_chat.app_desc':'Chat history, offline access, and more inside صلاح الدين',
                 'ai_chat.try_asking':'Try asking:',
                 'name_gen.title':'Islamic Name ','name_gen.highlight':'Generator','name_gen.desc':'Discover beautiful, meaningful Islamic names with Arabic script, English transliteration, and origins — powered by AI.',
                 'name_gen.label':'Generate names for a','name_gen.theme':'Meaning Theme','name_gen.optional':'(optional)','name_gen.btn':'✨ Generate Names',
@@ -2128,7 +2128,7 @@
                 'ai_chat.desc':'ইসলাম সম্পর্কে তাৎক্ষণিক উত্তর পান — কুরআন ও হাদিস থেকে নামাজ, ফিকহ এবং দৈনন্দিন মুসলিম জীবন পর্যন্ত। এই পেজেই দ্রুততম AI।',
                 'ai_chat.sub_title':'মিলিসেকেন্ডে উত্তর','ai_chat.sub_desc':'Groq LPU প্রযুক্তি মিলিসেকেন্ডে উত্তর দেয়',
                 'ai_chat.hadith_title':'কুরআন ও হাদিস রেফারেন্স','ai_chat.hadith_desc':'উত্তরে আরবি পাঠ্য ও প্রামাণিক উৎস অন্তর্ভুক্ত',
-                'ai_chat.app_title':'অ্যাপে সম্পূর্ণ অভিজ্ঞতা','ai_chat.app_desc':'চ্যাট হিস্ট্রি, অফলাইন অ্যাক্সেস এবং আরও অনেক কিছু SalaTime অ্যাপে',
+                'ai_chat.app_title':'অ্যাপে সম্পূর্ণ অভিজ্ঞতা','ai_chat.app_desc':'চ্যাট হিস্ট্রি, অফলাইন অ্যাক্সেস এবং আরও অনেক কিছু صلاح الدين অ্যাপে',
                 'ai_chat.try_asking':'জিজ্ঞেস করে দেখুন:',
                 'name_gen.title':'ইসলামিক নাম ','name_gen.highlight':'জেনারেটর','name_gen.desc':'আরবি লিপি, ইংরেজি উচ্চারণ এবং উৎস সহ সুন্দর ও অর্থবহ ইসলামিক নাম আবিষ্কার করুন — AI দ্বারা চালিত।',
                 'name_gen.label':'নাম তৈরি করুন','name_gen.theme':'অর্থের থিম','name_gen.optional':'(ঐচ্ছিক)','name_gen.btn':'✨ নাম তৈরি করুন',
@@ -2243,7 +2243,7 @@
                 'footer.privacy':'Política de Privacidad','footer.terms':'Términos y Condiciones','footer.support':'Soporte','footer.admin':'Panel de Admin',
                 'footer.copyright':'Aplicación Islámica. Todos los derechos reservados.','footer.built':'Construido con Flutter • Laravel • Amor ❤️',
                 'hero.badge':'Disponible en iOS y Android','hero.title':'Tu Compañero Islámico','hero.subtitle':'Completo',
-                'hero.description':'SalaTime te trae el Corán completo, horarios de oración, hadices, du\'as, Qibla, calculadora de Zakat, chat islámico con IA y más de 40 idiomas — todo en una hermosa aplicación.',
+                'hero.description':'صلاح الدين te trae el Corán completo, horarios de oración, hadices, du\'as, Qibla, calculadora de Zakat, chat islámico con IA y más de 40 idiomas — todo en una hermosa aplicación.',
                 'features.title':'Todo lo que Necesitas','features.desc':'Un compañero completo de estilo de vida islámico lleno de características que te ayudan a mantenerte conectado con tu fe cada día.',
                 'quran.title':'Experiencia Completa de','quran.highlight':'Lectura del Corán','quran.description':'Lee, escucha y comprende el Sagrado Corán con traducciones multilingües, recitación de audio y hermosa tipografía árabe.',
                 'prayer.title':'Nunca te Pierdas','prayer.highlight':'una Oración','prayer.description':'Obtén horarios de oración precisos con hermosas notificaciones de Adhan. Encuentra la dirección de la Qibla con una brújula mejorada.',
@@ -2252,7 +2252,7 @@
                 'download.title':'Comienza tu Viaje','download.highlight':'Islámico Hoy','download.description':'Únete a cientos de miles de musulmanes en todo el mundo. Descárgalo gratis hoy.',
                 'footer.description':'Tu aplicación compañera islámica completa. Llevando la belleza del Islam a tus manos con tecnología moderna.',
                 'nav.donate':'Donar',
-                'donate.title':'Apoya Nuestra Misión','donate.desc':'Tu generosidad mantiene SalaTime gratuito para millones de musulmanes en todo el mundo.',
+                'donate.title':'Apoya Nuestra Misión','donate.desc':'Tu generosidad mantiene صلاح الدين gratuito para millones de musulmanes en todo el mundo.',
                 'donate.verse_trans':'"El ejemplo de quienes gastan en el camino de Allah es como una semilla que produce siete espigas" — Al-Baqarah 2:261',
                 'donate.why1_title':'App Siempre Gratuita','donate.why1_desc':'Mantiene la app gratuita para millones de musulmanes.',
                 'donate.why2_title':'Infraestructura Global','donate.why2_desc':'Financia servidores, CDN y disponibilidad 24/7.',
@@ -2284,7 +2284,7 @@
                 'ai_chat.desc':'Obtén respuestas instantáneas y precisas sobre el Islam — del Corán y Hadith a la oración, el fiqh y la vida diaria musulmana. IA ultrarrápida, aquí mismo en la página.',
                 'ai_chat.sub_title':'Respuestas en Menos de un Segundo','ai_chat.sub_desc':'La tecnología Groq LPU entrega respuestas en milisegundos',
                 'ai_chat.hadith_title':'Corán y Hadith Referenciados','ai_chat.hadith_desc':'Las respuestas incluyen texto árabe y citas de fuentes auténticas',
-                'ai_chat.app_title':'Experiencia Completa en la App','ai_chat.app_desc':'Historial de chat, acceso sin conexión y más dentro de SalaTime',
+                'ai_chat.app_title':'Experiencia Completa en la App','ai_chat.app_desc':'Historial de chat, acceso sin conexión y más dentro de صلاح الدين',
                 'ai_chat.try_asking':'Intenta preguntar:',
                 'name_gen.title':'Nombres Islámicos ','name_gen.highlight':'Generador','name_gen.desc':'Descubre nombres islámicos hermosos y significativos con escritura árabe, transliteración inglesa y orígenes — impulsado por IA.',
                 'name_gen.label':'Generar nombres para un','name_gen.theme':'Tema de Significado','name_gen.optional':'(opcional)','name_gen.btn':'✨ Generar Nombres',
@@ -2321,7 +2321,7 @@
                 'footer.privacy':'Politique de Confidentialité','footer.terms':'Conditions d\'Utilisation','footer.support':'Support','footer.admin':'Panneau Admin',
                 'footer.copyright':'Application Islamique. Tous droits réservés.','footer.built':'Construit avec Flutter • Laravel • Amour ❤️',
                 'hero.badge':'Disponible sur iOS et Android','hero.title':'Votre Compagnon Islamique','hero.subtitle':'Complet',
-                'hero.description':'SalaTime vous apporte le Coran complet, les horaires de prière, les hadiths, les douas, la Qibla, le calculateur Zakat, le chat islamique IA et plus de 40 langues — tout dans une belle application.',
+                'hero.description':'صلاح الدين vous apporte le Coran complet, les horaires de prière, les hadiths, les douas, la Qibla, le calculateur Zakat, le chat islamique IA et plus de 40 langues — tout dans une belle application.',
                 'features.title':'Tout ce dont Vous Avez Besoin','features.desc':'Un compagnon de style de vie islamique complet rempli de fonctionnalités qui vous aident à rester connecté à votre foi chaque jour.',
                 'quran.title':'Expérience de Lecture','quran.highlight':'Complète du Coran','quran.description':'Lisez, écoutez et comprenez le Saint Coran avec des traductions multilingues, une récitation audio et une belle typographie arabe.',
                 'prayer.title':'Ne Manquez Jamais','prayer.highlight':'une Prière','prayer.description':'Obtenez des horaires de prière précis avec de belles notifications Adhan. Trouvez la direction Qibla avec une boussole améliorée.',
@@ -2330,7 +2330,7 @@
                 'download.title':'Commencez Votre Voyage','download.highlight':'Islamique Aujourd\'hui','download.description':'Rejoignez des centaines de milliers de musulmans à travers le monde. Téléchargez gratuitement aujourd\'hui.',
                 'footer.description':'Votre application compagnon islamique complète. Apportant la beauté de l\'Islam à vos mains avec la technologie moderne.',
                 'nav.donate':'Faire un Don',
-                'donate.title':'Soutenez Notre Mission','donate.desc':'Votre générosité garde SalaTime gratuit pour des millions de musulmans dans le monde entier.',
+                'donate.title':'Soutenez Notre Mission','donate.desc':'Votre générosité garde صلاح الدين gratuit pour des millions de musulmans dans le monde entier.',
                 'donate.verse_trans':'"L\'exemple de ceux qui dépensent leurs biens dans le sentier d\'Allah est celui d\'un grain qui produit sept épis" — Al-Baqarah 2:261',
                 'donate.why1_title':'App Toujours Gratuite','donate.why1_desc':'Garde l\'application gratuite pour des millions de musulmans.',
                 'donate.why2_title':'Infrastructure Mondiale','donate.why2_desc':'Finance les serveurs, CDN et disponibilité 24/7.',
@@ -2362,7 +2362,7 @@
                 'ai_chat.desc':'Obtenez des réponses instantanées sur l\'Islam — du Coran et Hadith à la prière, le fiqh et la vie quotidienne musulmane. IA ultra-rapide, ici sur cette page.',
                 'ai_chat.sub_title':'Réponses en Moins d\'une Seconde','ai_chat.sub_desc':'La technologie Groq LPU fournit des réponses en millisecondes',
                 'ai_chat.hadith_title':'Coran et Hadith Référencés','ai_chat.hadith_desc':'Les réponses incluent le texte arabe et des citations de sources authentiques',
-                'ai_chat.app_title':'Expérience Complète dans l\'App','ai_chat.app_desc':'Historique de chat, accès hors ligne et plus encore dans SalaTime',
+                'ai_chat.app_title':'Expérience Complète dans l\'App','ai_chat.app_desc':'Historique de chat, accès hors ligne et plus encore dans صلاح الدين',
                 'ai_chat.try_asking':'Essayez de demander :',
                 'name_gen.title':'Prénom Islamique ','name_gen.highlight':'Générateur','name_gen.desc':'Découvrez de beaux prénoms islamiques significatifs avec écriture arabe, translittération anglaise et origines — propulsé par l\'IA.',
                 'name_gen.label':'Générer des prénoms pour un','name_gen.theme':'Thème de Signification','name_gen.optional':'(optionnel)','name_gen.btn':'✨ Générer des Prénoms',

@@ -89,7 +89,7 @@ class _PrayerMonthScreenState extends State<PrayerMonthScreen> {
     final material = MaterialLocalizations.of(context);
     final city = _days.whereType<PrayerShareData>().first.city;
     final text = [
-      'SalaTime · ${'prayer_month_title'.tr}',
+      'صلاح الدين · ${'prayer_month_title'.tr}',
       if (city.isNotEmpty) city,
       material.formatMonthYear(_month),
       '',

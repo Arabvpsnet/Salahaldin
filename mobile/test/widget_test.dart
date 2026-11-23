@@ -30,8 +30,8 @@ import 'package:salatime/view/screens/notification/widgets/salat_waqt_repository
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('SalaTime application identity is configured', () {
-    expect(AppConstants.APP_NAME, 'SalaTime');
+  test('صلاح الدين application identity is configured', () {
+    expect(AppConstants.APP_NAME, 'صلاح الدين');
     expect(Uri.parse(AppConstants.BASE_URL).host, 'salatime.net');
   });
 
@@ -1180,7 +1180,7 @@ class _OnboardingTestTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
     'en_US': {
-      'onboarding_welcome_title': 'Welcome to SalaTime',
+      'onboarding_welcome_title': 'Welcome to صلاح الدين',
       'onboarding_welcome_body': 'Setup body',
       'onboarding_language_label': 'Application language',
       'onboarding_settings_title': 'Prayer notifications',

@@ -234,7 +234,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(TextFormField), findsNothing);
     expect(
-      find.text('Vous pouvez continuer à utiliser SalaTime sans compte.'),
+      find.text('Vous pouvez continuer à utiliser صلاح الدين sans compte.'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

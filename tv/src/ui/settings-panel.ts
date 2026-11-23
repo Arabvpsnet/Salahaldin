@@ -120,7 +120,7 @@ export class SettingsPanel {
 
     this.nav.innerHTML = '';
     this.nav.append(
-      h('div', { class: 'sp-brand' }, h('span', { class: 'sp-logo', html: brandMark() }), h('div', null, h('b', null, 'Salahaldin'), h('small', { class: 'ar' }, 'سكينة'))),
+      h('div', { class: 'sp-brand' }, h('span', { class: 'sp-logo', html: brandMark() }), h('div', null, h('b', { class: 'ar' }, 'صلاح الدين'))),
       h('div', { class: 'sp-lang', role: 'radiogroup', 'aria-label': 'Language' }, ...([['ar', 'العربية'], ['da', 'Dansk'], ['en', 'English'], ['tr', 'Türkçe'], ['fr', 'FR']] as [Lang, string][]).map(([v, l]) => h('button', {
         type: 'button', class: s.lang === v ? 'on' : '', 'data-key': `lang-${v}`, role: 'radio', 'aria-checked': String(s.lang === v),
         onclick: () => { setPath('lang', v); this.render(); },
@@ -665,7 +665,7 @@ export class SettingsPanel {
         h('div', { class: 'about wide' },
           h('div', { class: 'about-logo', html: brandMark() }),
           h('div', null,
-            h('b', null, `Salahaldin ${VERSION}`), h('span', { class: 'ar' }, ' — صلاح الدين'),
+            h('b', null, `صلاح الدين ${VERSION}`),
             h('p', null, L('Application libre et gratuite (licence MIT), réalisée fi sabilillah. Horaires : adhan-js (Jean Meeus), API Aladhan. Coran : Tanzil. Adhkar : Hisn al-Muslim. Photos : Wikimedia Commons.', 'Free & open-source (MIT), made fi sabilillah. Times: adhan-js (Jean Meeus), Aladhan API. Qur’an: Tanzil. Adhkar: Hisn al-Muslim. Photos: Wikimedia Commons.', 'تطبيق مجاني ومفتوح المصدر، في سبيل الله.')),
             h('a', { href: REPO, target: '_blank', rel: 'noopener' }, REPO.replace('https://', ''))))),
     ];

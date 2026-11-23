@@ -52,7 +52,7 @@ void main() {
     enabled: true,
     platform: () => TargetPlatform.iOS,
     installedApp: () async => PackageInfo(
-      appName: 'SalaTime',
+      appName: 'صلاح الدين',
       packageName: 'net.salatime.app',
       version: '1.0.28',
       buildNumber: '33',
@@ -130,7 +130,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('app-update-banner')), findsOneWidget);
     expect(find.byType(Dialog), findsNothing);
-    expect(find.text('SalaTime 1.0.29 est disponible.'), findsOneWidget);
+    expect(find.text('صلاح الدين 1.0.29 est disponible.'), findsOneWidget);
     expect(paused.last, isTrue);
     await tester.tap(find.byKey(const ValueKey('app-update-later')));
     await tester.pumpAndSettle();

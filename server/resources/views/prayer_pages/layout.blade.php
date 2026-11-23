@@ -15,7 +15,7 @@
     <link rel="alternate" hreflang="x-default" href="{{ $alternates['en'] }}">
 
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="SalaTime">
+    <meta property="og:site_name" content="صلاح الدين">
     <meta property="og:locale" content="{{ $localeConfig['og_locale'] }}">
     <meta property="og:title" content="@yield('title')">
     <meta property="og:description" content="@yield('description')">
@@ -183,8 +183,8 @@
 <body>
     <header class="site-header">
         <div class="container nav">
-            <a class="brand" href="{{ config('seo.site_url') }}/?lang={{ $locale }}" aria-label="SalaTime">
-                <img src="{{ asset('assets/img/logo.png') }}?v=20260827" alt="SalaTime">
+            <a class="brand" href="{{ config('seo.site_url') }}/?lang={{ $locale }}" aria-label="صلاح الدين">
+                <img src="{{ asset('assets/img/logo.png') }}?v=20260827" alt="صلاح الدين">
                 <span class="brand-tagline">{{ __('prayer_pages.brand_tagline') }}</span>
             </a>
             <div class="nav-actions">
@@ -200,7 +200,7 @@
 
     <footer>
         <div class="container footer-row">
-            <span>© {{ date('Y') }} SalaTime · {{ __('prayer_pages.source') }} : <a href="https://www.geonames.org/">GeoNames</a> (<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>)</span>
+            <span>© {{ date('Y') }} صلاح الدين · {{ __('prayer_pages.source') }} : <a href="https://www.geonames.org/">GeoNames</a> (<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>)</span>
             <span><a href="{{ $worldUrl }}">{{ __('prayer_pages.world_heading') }}</a> · <a href="{{ url('privacy-policy') }}">{{ __('prayer_pages.privacy') }}</a></span>
         </div>
         <div class="container">@include('shared.source-links')</div>

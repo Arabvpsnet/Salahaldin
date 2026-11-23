@@ -471,7 +471,7 @@ class _ModernPrayerDashboardState extends State<ModernPrayerDashboard> {
     for (final value in [preferred, fallback]) {
       if (value.trim().isNotEmpty && value.trim() != '--') return value.trim();
     }
-    return 'SalaTime';
+    return 'صلاح الدين';
   }
 
   @override

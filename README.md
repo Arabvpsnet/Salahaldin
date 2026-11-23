@@ -1,4 +1,4 @@
-# Salahaldin — صلاتي / صلاح الدين
+# صلاح الدين
 
 Source integration of mobile prayer/Quran app, mosque TV display, and a self-hosted API.
 

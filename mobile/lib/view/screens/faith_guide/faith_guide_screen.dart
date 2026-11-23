@@ -4,6 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:salatime/view/screens/dhikr/dhikr_screen.dart';
+import 'package:salatime/view/screens/offline_quran/main_offline_quran_screen.dart';
+import 'package:salatime/view/screens/quran_editions/salahaldin_edition_library_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef _Guide = Map<String, dynamic>;
@@ -11,6 +14,7 @@ typedef _Guide = Map<String, dynamic>;
 enum _Topic {
   islam(Icons.menu_book_outlined),
   ramadan(Icons.nightlight_round),
+  library(Icons.local_library_outlined),
   ruqyah(Icons.headphones_outlined);
 
   const _Topic(this.icon);
@@ -265,6 +269,41 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
                   ),
                 ),
               ]),
+            ] else if (widget.topic == _Topic.library) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                child: Text(_text('library_offline')),
+              ),
+              for (final (key, icon, reader) in [
+                (
+                  'library_quran',
+                  Icons.menu_book_outlined,
+                  const MainOfflineQuranScreen(
+                    appBackButton: true,
+                    openOnSurahs: true,
+                  ),
+                ),
+                (
+                  'library_editions',
+                  Icons.translate,
+                  const SalahaldinEditionLibraryScreen(),
+                ),
+                (
+                  'library_athkar',
+                  Icons.auto_stories_outlined,
+                  const DhikrScreen(appBackButton: true),
+                ),
+              ])
+                Card(
+                  child: ListTile(
+                    leading: Icon(icon),
+                    title: Text(_text(key)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => reader),
+                    ),
+                  ),
+                ),
             ] else if (widget.topic == _Topic.ramadan) ...[
               _section('ramadan_about_title', [Text(_text('ramadan_about'))]),
               _section('ramadan_ruling_title', [Text(_text('ramadan_ruling'))]),

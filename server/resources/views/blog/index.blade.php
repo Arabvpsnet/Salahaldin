@@ -4,8 +4,8 @@
     @include('shared.google-analytics')
     @php
         $blogCanonical = config('seo.site_url') . '/blog';
-        $blogTitle = 'Islamic Prayer, Quran & Qibla Guides – SalaTime';
-        $blogDescription = 'Practical Islamic guides about prayer times, Quran reading, Qibla direction, Adhan reminders, duas and dhikr from SalaTime.';
+        $blogTitle = 'Islamic Prayer, Quran & Qibla Guides – صلاح الدين';
+        $blogDescription = 'Practical Islamic guides about prayer times, Quran reading, Qibla direction, Adhan reminders, duas and dhikr from صلاح الدين.';
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@
     <meta name="robots" content="{{ $posts->isEmpty() ? 'noindex,follow' : 'index,follow' }}">
     <link rel="canonical" href="{{ $blogCanonical }}">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="SalaTime">
+    <meta property="og:site_name" content="صلاح الدين">
     <meta property="og:title" content="{{ $blogTitle }}">
     <meta property="og:description" content="{{ $blogDescription }}">
     <meta property="og:url" content="{{ $blogCanonical }}">
@@ -99,9 +99,9 @@
 <header class="topbar">
     <a href="{{ url('/') }}" class="topbar-brand">
         @if(!empty($s['web_logo']))
-            <img src="{{ asset($s['web_logo']) }}?v=20260827" alt="{{ $s['app_name'] ?? 'SalaTime' }}" class="topbar-logo">
+            <img src="{{ asset($s['web_logo']) }}?v=20260827" alt="{{ $s['app_name'] ?? 'صلاح الدين' }}" class="topbar-logo">
         @else
-            <span class="topbar-name">{{ $s['app_name'] ?? 'SalaTime' }}</span>
+            <span class="topbar-name">{{ $s['app_name'] ?? 'صلاح الدين' }}</span>
         @endif
     </a>
     <a href="{{ url('/') }}" class="topbar-link">← Back to Home</a>
@@ -110,7 +110,7 @@
 <div class="hero">
     <div class="hero-badge">✍️ Blog</div>
     <h1>Islamic Articles &amp; Guides</h1>
-    <p>Insights, tips, and Islamic knowledge from the {{ $s['app_name'] ?? 'SalaTime' }} team</p>
+    <p>Insights, tips, and Islamic knowledge from the {{ $s['app_name'] ?? 'صلاح الدين' }} team</p>
 </div>
 
 <div class="container grid-section">
@@ -165,7 +165,7 @@
 </div>
 
 <footer class="page-footer">
-    <p>© {{ date('Y') }} {{ $s['app_name'] ?? 'SalaTime' }}. All rights reserved.</p>
+    <p>© {{ date('Y') }} {{ $s['app_name'] ?? 'صلاح الدين' }}. All rights reserved.</p>
     <p style="margin-top:8px;">
         <a href="{{ url('/') }}">Home</a>
         <a href="{{ url('privacy-policy') }}">Privacy Policy</a>

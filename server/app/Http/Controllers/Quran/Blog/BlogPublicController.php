@@ -45,7 +45,7 @@ class BlogPublicController extends Controller
         }
 
         return array_merge([
-            'app_name' => 'SalaTime',
+            'app_name' => 'صلاح الدين',
             'web_logo' => $app['web_logo'] ?? null,
         ], (array) $landing, (array) $app);
     }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="prayer_widget_next_label">Prochaine prière</string>
-    <string name="prayer_widget_open_label">Ouvrez SalaTime pour actualiser</string>
+    <string name="prayer_widget_open_label">Ouvrez صلاح الدين pour actualiser</string>
     <string name="prayer_widget_preview_prayer">As-sobh</string>
-    <string name="prayer_widget_small">SalaTime · Petit</string>
-    <string name="prayer_widget_large">SalaTime · Grand</string>
+    <string name="prayer_widget_small">صلاح الدين · Petit</string>
+    <string name="prayer_widget_large">صلاح الدين · Grand</string>
     <string name="prayer_widget_since_label">Temps écoulé depuis @prayer</string>
     <string name="prayer_widget_countdown_prefix">dans</string>
 </resources>

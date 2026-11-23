@@ -12,6 +12,6 @@
 <p style="margin:24px 0 8px;font-size:14px;line-height:23px;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
 <p style="margin:0;font-size:13px;line-height:22px;word-break:break-all;"><a href="{{ $resetLink }}" style="color:{{ config('brand.primary', '#2F5233') }};">{{ $resetLink }}</a></p>
 <p style="margin:24px 0;font-size:15px;line-height:25px;">Si vous n’attendiez pas cet e-mail, vous pouvez l’ignorer.</p>
-<p style="margin:0;font-size:15px;line-height:25px;">À très bientôt,<br><strong style="color:{{ config('brand.primary', '#2F5233') }};">L’équipe SalaTime</strong></p>
+<p style="margin:0;font-size:15px;line-height:25px;">À très bientôt,<br><strong style="color:{{ config('brand.primary', '#2F5233') }};">L’équipe صلاح الدين</strong></p>
 </td></tr>
 @endsection

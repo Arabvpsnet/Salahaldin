@@ -145,7 +145,7 @@ class _DailyVerseCardState extends State<DailyVerseCard>
                         translation: verse.translation,
                         footnotes: verse.footnotes,
                         source: verse.translationSource,
-                        appName: 'SalaTime',
+                        appName: 'صلاح الدين',
                       ),
                       sharePositionOrigin: box == null
                           ? null

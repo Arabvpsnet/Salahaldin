@@ -30,7 +30,12 @@
     "ramadan_intention": "النية: يعزم المسلم في قلبه على الصيام لله، ولا يلزم التلفظ بها. وتختلف المذاهب في بعض تفاصيل وقتها وتجديدها.",
     "ramadan_abstinence": "الإمساك: يمتنع الصائم عن الطعام والشراب والجماع وسائر المفطرات من طلوع الفجر الصادق إلى غروب الشمس.",
     "ramadan_references": "المصادر: سورة البقرة، الآيات ١٨٣–١٨٧، وصحيح البخاري ٨.",
-    "reciter": "محمود خليل الحصري"
+    "reciter": "محمود خليل الحصري",
+    "library": "المكتبة الإسلامية",
+    "library_offline": "اقرأ النصوص المحفوظة في التطبيق دون اتصال بالإنترنت.",
+    "library_quran": "المصحف الشريف",
+    "library_editions": "ترجمات معاني القرآن والتفاسير",
+    "library_athkar": "الأذكار والأدعية"
   },
   "en": {
     "name": "English",
@@ -63,7 +68,12 @@
     "ramadan_intention": "Intention: Resolve in your heart to fast for Allah. It does not have to be spoken aloud. Schools of Islamic law differ on some details of when and how often it is made.",
     "ramadan_abstinence": "Abstention: Refrain from food, drink, sexual intercourse and other acts that invalidate the fast from true dawn until sunset.",
     "ramadan_references": "Sources: Al-Baqarah 2:183–187 and Sahih al-Bukhari 8.",
-    "reciter": "Mahmoud Khalil Al-Hussary"
+    "reciter": "Mahmoud Khalil Al-Hussary",
+    "library": "Islamic library",
+    "library_offline": "Read the texts stored in the app without an internet connection.",
+    "library_quran": "The Qur’an",
+    "library_editions": "Qur’an translations and tafsir",
+    "library_athkar": "Remembrance and supplications"
   },
   "da": {
     "name": "Dansk",
@@ -96,7 +106,12 @@
     "ramadan_intention": "Hensigten: Beslut i dit hjerte at faste for Allah. Hensigten behøver ikke siges højt. Retsskolerne er uenige om visse detaljer om, hvornår og hvor ofte den skal dannes.",
     "ramadan_abstinence": "Afholdenhed: Afstå fra mad, drikke, samleje og andre handlinger, der gør fasten ugyldig, fra det første morgenlys (fajr) til solnedgang.",
     "ramadan_references": "Kilder: Al-Baqara 2:183–187 og Sahih al-Bukhari 8.",
-    "reciter": "Mahmoud Khalil Al-Hussary"
+    "reciter": "Mahmoud Khalil Al-Hussary",
+    "library": "Islamisk bibliotek",
+    "library_offline": "Læs teksterne i appen uden internetforbindelse.",
+    "library_quran": "Koranen",
+    "library_editions": "Koranoversættelser og tafsir",
+    "library_athkar": "Dhikr og bønner"
   },
   "bs": {
     "name": "Bosanski",
@@ -129,7 +144,12 @@
     "ramadan_intention": "Nijet: Odluči srcem da postiš radi Allaha. Nijet se ne mora izgovarati naglas. Mezhebi se razlikuju u pojedinostima o vremenu i obnavljanju nijeta.",
     "ramadan_abstinence": "Suzdržavanje: Od nastupa prave zore do zalaska sunca suzdrži se od hrane, pića, spolnog odnosa i drugih radnji koje kvare post.",
     "ramadan_references": "Izvori: El-Bekare 2:183–187 i Sahih el-Buhari 8.",
-    "reciter": "Mahmud Halil el-Husari"
+    "reciter": "Mahmud Halil el-Husari",
+    "library": "Islamska biblioteka",
+    "library_offline": "Čitaj tekstove pohranjene u aplikaciji bez internetske veze.",
+    "library_quran": "Kur’an",
+    "library_editions": "Prijevodi značenja Kur’ana i tefsiri",
+    "library_athkar": "Zikr i dove"
   },
   "tr": {
     "name": "Türkçe",
@@ -162,7 +182,12 @@
     "ramadan_intention": "Niyet: Allah rızası için oruç tutmaya kalben karar vermektir. Dil ile söylemek gerekmez. Niyetin zamanı ve yenilenmesiyle ilgili bazı ayrıntılarda mezhepler arasında farklılık vardır.",
     "ramadan_abstinence": "İmsak: Fecr-i sâdıktan güneş batıncaya kadar yemekten, içmekten, cinsel ilişkiden ve orucu bozan diğer fiillerden uzak durmaktır.",
     "ramadan_references": "Kaynaklar: Bakara 2:183–187 ve Sahih-i Buhârî 8.",
-    "reciter": "Mahmud Halil el-Husarî"
+    "reciter": "Mahmud Halil el-Husarî",
+    "library": "İslami kütüphane",
+    "library_offline": "Uygulamada saklanan metinleri internet bağlantısı olmadan okuyun.",
+    "library_quran": "Kur’an-ı Kerim",
+    "library_editions": "Kur’an mealleri ve tefsirler",
+    "library_athkar": "Zikirler ve dualar"
   },
   "ckb": {
     "name": "کوردیی سۆرانی",
@@ -195,7 +220,12 @@
     "ramadan_intention": "نیەت: لە دڵتدا بڕیار بدە بۆ خوا ڕۆژوو بگریت. پێویست ناکات بە دەنگ بیڵێیت. مەزهەبەکان لە هەندێک وردەکاریی کات و نوێکردنەوەی نیەتدا جیاوازن.",
     "ramadan_abstinence": "خۆگرتن: لە سپێدەی ڕاستەقینەوە تا خۆرئاوابوون لە خواردن، خواردنەوە، پەیوەندیی سێکسی و هەر شتێکی تری ڕۆژووشکێن خۆ بگرە.",
     "ramadan_references": "سەرچاوەکان: سوورەتی بەقەرە ٢:١٨٣–١٨٧ و سەحیحی بوخاری ٨.",
-    "reciter": "مەحمود خەلیل حوسەری"
+    "reciter": "مەحمود خەلیل حوسەری",
+    "library": "کتێبخانەی ئیسلامی",
+    "library_offline": "دەقە هەڵگیراوەکانی بەرنامەکە بەبێ ئینتەرنێت بخوێنەوە.",
+    "library_quran": "قورئانی پیرۆز",
+    "library_editions": "وەرگێڕانی ماناکانی قورئان و تەفسیرەکان",
+    "library_athkar": "زیکر و دوعاکان"
   },
   "kmr": {
     "name": "کوردیا بەهدینانی",
@@ -228,7 +258,12 @@
     "ramadan_intention": "نیەت: د دڵێ خۆ دا بڕیار بدە بۆ خودێ ڕۆژی بگری. پێدڤی ناکەت ب دەنگ بێژی. مەزهەب د هەندەک وردەکاریێن دەم و نووکرنا نیەتێ دا جودانە.",
     "ramadan_abstinence": "خۆگرتن: ژ سپێدێ یا ڕاست تا ئاڤابوونا ڕۆژێ ژ خوارن، ڤەخوارن، پەیوەندیا جنسی و هەر تشتەکێ ڕۆژیێ دشکێنیت خۆ بگرە.",
     "ramadan_references": "ژێدەر: سوورەتا بەقەرە ٢:١٨٣–١٨٧ و سەحیحا بوخاری ٨.",
-    "reciter": "مەحمود خەلیل حوسەری"
+    "reciter": "مەحمود خەلیل حوسەری",
+    "library": "پەرتووکخانا ئیسلامی",
+    "library_offline": "دەقێن د بەرنامەیێ دا هاتینە هەڵگرتن بێ ئینتەرنێت بخوینە.",
+    "library_quran": "قورئانا پیرۆز",
+    "library_editions": "وەرگێڕانا مانایێن قورئانێ و تەفسیر",
+    "library_athkar": "زیکر و دوعا"
   },
   "de": {
     "name": "Deutsch",
@@ -261,7 +296,12 @@
     "ramadan_intention": "Absicht: Fasse im Herzen den Entschluss, für Allah zu fasten. Die Absicht muss nicht laut ausgesprochen werden. Die Rechtsschulen unterscheiden sich in Einzelheiten zum Zeitpunkt und zur Erneuerung der Absicht.",
     "ramadan_abstinence": "Enthaltsamkeit: Verzichte von der tatsächlichen Morgendämmerung bis zum Sonnenuntergang auf Essen, Trinken, Geschlechtsverkehr und andere Handlungen, die das Fasten ungültig machen.",
     "ramadan_references": "Quellen: Al-Baqara 2:183–187 und Sahih al-Bukhari 8.",
-    "reciter": "Mahmud Chalil al-Husari"
+    "reciter": "Mahmud Chalil al-Husari",
+    "library": "Islamische Bibliothek",
+    "library_offline": "Lies die in der App gespeicherten Texte ohne Internetverbindung.",
+    "library_quran": "Der Koran",
+    "library_editions": "Koranübersetzungen und Tafsir",
+    "library_athkar": "Dhikr und Bittgebete"
   },
   "fr": {
     "name": "Français",
@@ -294,7 +334,12 @@
     "ramadan_intention": "L’intention : décide intérieurement de jeûner pour Allah. Il n’est pas nécessaire de le dire à voix haute. Les écoles juridiques diffèrent sur certains détails concernant le moment et le renouvellement de l’intention.",
     "ramadan_abstinence": "L’abstention : abstiens-toi de manger, de boire, d’avoir des rapports sexuels et de commettre les autres actes qui annulent le jeûne, de l’aube véritable au coucher du soleil.",
     "ramadan_references": "Sources : Al-Baqara 2:183–187 et Sahih al-Bukhari 8.",
-    "reciter": "Mahmoud Khalil Al-Hussary"
+    "reciter": "Mahmoud Khalil Al-Hussary",
+    "library": "Bibliothèque islamique",
+    "library_offline": "Lis les textes enregistrés dans l’application sans connexion à Internet.",
+    "library_quran": "Le Coran",
+    "library_editions": "Traductions du sens du Coran et tafsirs",
+    "library_athkar": "Dhikr et invocations"
   },
   "ur": {
     "name": "اردو",
@@ -327,7 +372,12 @@
     "ramadan_intention": "نیت: دل میں اللہ کے لیے روزہ رکھنے کا ارادہ کریں۔ زبان سے کہنا ضروری نہیں۔ نیت کے وقت اور تجدید کی بعض تفصیلات میں فقہی مذاہب کا اختلاف ہے۔",
     "ramadan_abstinence": "امساک: صبحِ صادق سے سورج غروب ہونے تک کھانے، پینے، ازدواجی تعلق اور روزہ توڑنے والے دوسرے کاموں سے رکیں۔",
     "ramadan_references": "حوالے: سورۂ بقرہ ۲:۱۸۳–۱۸۷ اور صحیح بخاری ۸۔",
-    "reciter": "محمود خلیل الحصری"
+    "reciter": "محمود خلیل الحصری",
+    "library": "اسلامی کتب خانہ",
+    "library_offline": "ایپ میں محفوظ متون انٹرنیٹ کے بغیر پڑھیں۔",
+    "library_quran": "قرآنِ مجید",
+    "library_editions": "قرآن کے معانی کے تراجم اور تفاسیر",
+    "library_athkar": "اذکار اور دعائیں"
   },
   "id": {
     "name": "Bahasa Indonesia",
@@ -360,7 +410,12 @@
     "ramadan_intention": "Niat: Berniatlah dalam hati untuk berpuasa karena Allah. Niat tidak harus diucapkan. Mazhab fikih berbeda dalam beberapa rincian waktu dan pembaruan niat.",
     "ramadan_abstinence": "Menahan diri: Sejak fajar sidik hingga matahari terbenam, hindari makan, minum, hubungan seksual, dan hal lain yang membatalkan puasa.",
     "ramadan_references": "Sumber: Al-Baqarah 2:183–187 dan Sahih al-Bukhari 8.",
-    "reciter": "Mahmud Khalil Al-Hushari"
+    "reciter": "Mahmud Khalil Al-Hushari",
+    "library": "Perpustakaan Islam",
+    "library_offline": "Baca teks yang tersimpan di aplikasi tanpa koneksi internet.",
+    "library_quran": "Al-Qur’an",
+    "library_editions": "Terjemahan makna Al-Qur’an dan tafsir",
+    "library_athkar": "Zikir dan doa"
   },
   "ms": {
     "name": "Bahasa Melayu",
@@ -393,7 +448,12 @@
     "ramadan_intention": "Niat: Berniat dalam hati untuk berpuasa kerana Allah. Niat tidak perlu dilafazkan. Mazhab berbeza pada beberapa perincian tentang waktu dan pembaharuan niat.",
     "ramadan_abstinence": "Menahan diri: Dari terbit fajar sadik hingga terbenam matahari, tahan diri daripada makan, minum, persetubuhan dan perkara lain yang membatalkan puasa.",
     "ramadan_references": "Sumber: Al-Baqarah 2:183–187 dan Sahih al-Bukhari 8.",
-    "reciter": "Mahmud Khalil Al-Husari"
+    "reciter": "Mahmud Khalil Al-Husari",
+    "library": "Perpustakaan Islam",
+    "library_offline": "Baca teks yang tersimpan dalam aplikasi tanpa sambungan internet.",
+    "library_quran": "Al-Quran",
+    "library_editions": "Terjemahan makna al-Quran dan tafsir",
+    "library_athkar": "Zikir dan doa"
   },
   "es": {
     "name": "Español",
@@ -426,7 +486,12 @@
     "ramadan_intention": "Intención: Decide en tu corazón ayunar por Alá. No hace falta decirlo en voz alta. Las escuelas jurídicas difieren en algunos detalles sobre cuándo formular y renovar la intención.",
     "ramadan_abstinence": "Abstención: Desde el alba verdadera hasta la puesta del sol, abstente de comer, beber, mantener relaciones sexuales y realizar otros actos que invaliden el ayuno.",
     "ramadan_references": "Fuentes: Al-Baqara 2:183–187 y Sahih al-Bujari 8.",
-    "reciter": "Mahmud Jalil Al-Husari"
+    "reciter": "Mahmud Jalil Al-Husari",
+    "library": "Biblioteca islámica",
+    "library_offline": "Lee los textos guardados en la aplicación sin conexión a internet.",
+    "library_quran": "El Corán",
+    "library_editions": "Traducciones del significado del Corán y tafsir",
+    "library_athkar": "Recuerdos de Alá y súplicas"
   },
   "bn": {
     "name": "বাংলা",
@@ -459,7 +524,12 @@
     "ramadan_intention": "নিয়ত: আল্লাহর জন্য রোজা রাখার সিদ্ধান্ত অন্তরে নিন। মুখে উচ্চারণ করা জরুরি নয়। নিয়তের সময় ও তা নতুন করে করার কিছু বিস্তারিত বিষয়ে মাজহাবগুলোর মধ্যে পার্থক্য আছে।",
     "ramadan_abstinence": "বিরত থাকা: সুবহে সাদিক থেকে সূর্যাস্ত পর্যন্ত খাওয়া, পান করা, যৌনমিলন ও রোজা ভঙ্গকারী অন্যান্য কাজ থেকে বিরত থাকুন।",
     "ramadan_references": "সূত্র: সুরা আল-বাকারা ২:১৮৩–১৮৭ এবং সহিহ বুখারি ৮।",
-    "reciter": "মাহমুদ খলিল আল-হুসারি"
+    "reciter": "মাহমুদ খলিল আল-হুসারি",
+    "library": "ইসলামি গ্রন্থাগার",
+    "library_offline": "অ্যাপে সংরক্ষিত লেখাগুলো ইন্টারনেট সংযোগ ছাড়াই পড়ুন।",
+    "library_quran": "পবিত্র কুরআন",
+    "library_editions": "কুরআনের অর্থের অনুবাদ ও তাফসির",
+    "library_athkar": "জিকির ও দোয়া"
   },
   "fa": {
     "name": "فارسی",
@@ -492,6 +562,11 @@
     "ramadan_intention": "نیت: در دل تصمیم بگیرید برای الله روزه بگیرید. بر زبان آوردن نیت لازم نیست. مذاهب فقهی در برخی جزئیات زمان و تجدید نیت اختلاف دارند.",
     "ramadan_abstinence": "خودداری: از سپیده‌دم صادق تا غروب خورشید از خوردن، نوشیدن، رابطهٔ جنسی و کارهای دیگری که روزه را باطل می‌کنند خودداری کنید.",
     "ramadan_references": "منابع: سورهٔ بقره ۲:۱۸۳–۱۸۷ و صحیح بخاری ۸.",
-    "reciter": "محمود خلیل الحصری"
+    "reciter": "محمود خلیل الحصری",
+    "library": "کتابخانهٔ اسلامی",
+    "library_offline": "متن‌های ذخیره‌شده در برنامه را بدون اتصال به اینترنت بخوانید.",
+    "library_quran": "قرآن کریم",
+    "library_editions": "ترجمه‌های معانی قرآن و تفسیرها",
+    "library_athkar": "اذکار و دعاها"
   }
 }

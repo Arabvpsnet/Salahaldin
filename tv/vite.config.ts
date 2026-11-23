@@ -17,8 +17,8 @@ export default defineConfig({
       injectRegister: false, // registered in src/main.ts (with error handling)
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'Salahaldin — صلاة وإقامة',
-        short_name: 'Salahaldin',
+        name: 'صلاح الدين — صلاة وإقامة',
+        short_name: 'صلاح الدين',
         description: 'Prayer times, iqamah, Quran verses and adhkar for mosque and home screens.',
         lang: 'ar',
         dir: 'rtl',

@@ -64,7 +64,7 @@ class PrayerWidgetPreview extends StatelessWidget {
                               color: BrandColors.primary,
                             ),
                             SizedBox(width: 6),
-                            _PreviewText('SalaTime', size: 12),
+                            _PreviewText('صلاح الدين', size: 12),
                           ],
                         ),
                       Expanded(
@@ -208,7 +208,7 @@ class _IosPreview extends StatelessWidget {
                         size: 15,
                       ),
                       const SizedBox(width: 6),
-                      const Text('SalaTime'),
+                      const Text('صلاح الدين'),
                     ],
                   ),
                   const SizedBox(height: 10),
