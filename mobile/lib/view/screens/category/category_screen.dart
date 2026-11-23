@@ -9,6 +9,7 @@ import 'package:salatime/util/images.dart';
 import 'package:salatime/view/base/custom_app_bar.dart';
 import 'package:salatime/view/screens/category/widget/grid_view_item_widget.dart';
 import 'package:salatime/view/screens/category/widget/list_view_item_widget.dart';
+import 'package:salatime/view/screens/faith_guide/faith_guide_screen.dart';
 
 import '../../../util/dimensions.dart';
 
@@ -67,6 +68,7 @@ class CategoryScreen extends StatelessWidget {
             return Obx(
               () => Column(
                 children: [
+                  const FaithGuideEntries(),
                   categoryListController.isCategoryChange.value == false
                       ? Padding(
                           padding: const EdgeInsets.symmetric(

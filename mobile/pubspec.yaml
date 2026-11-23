@@ -100,6 +100,7 @@ flutter:
     - assets/icon/flag/
     - assets/icon/modern-icons/svg/
     - assets/language/
+    - assets/faith/
     - assets/audio/
     - assets/athkar/
     - assets/quran/
