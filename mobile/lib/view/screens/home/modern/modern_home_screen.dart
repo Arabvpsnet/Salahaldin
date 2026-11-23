@@ -57,7 +57,8 @@ class ModernHomeScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth.clamp(0.0, 1400.0);
-        final wide = width >= 840;
+        final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        final wide = width >= 840 * scale.clamp(1.0, 1.6);
         final prayerWidth = wide ? (width * 6 / 11).floorToDouble() : width;
         // Keep the same widget ancestry across rotation so the dashboard's
         // selected day and daily-card state survive the layout change.

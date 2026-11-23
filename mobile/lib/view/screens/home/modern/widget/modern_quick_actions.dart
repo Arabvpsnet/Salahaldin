@@ -75,8 +75,8 @@ class ModernQuickActions extends StatelessWidget {
                       : AppColorModern.textPrimary,
                 ),
               ),
-              GestureDetector(
-                onTap: () => Get.to(
+              TextButton(
+                onPressed: () => Get.to(
                   () => CategoryScreen(appBackButton: true),
                   routeName: '/more',
                 ),
@@ -102,29 +102,34 @@ class ModernQuickActions extends StatelessWidget {
             ],
           ),
           const SizedBox(height: Dimensions.PADDING_SIZE_SMALL),
-          SizedBox(
-            height:
-                64 +
-                MediaQuery.textScalerOf(
-                      context,
-                    ).scale(Dimensions.FONT_SIZE_EXTRA_SMALL) *
-                    3,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: items.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(width: Dimensions.PADDING_SIZE_DEFAULT),
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return _QuickActionTile(
-                  icon: item.icon,
-                  label: item.label,
-                  route: item.route,
-                  tint: item.tint,
-                );
-              },
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 8.0;
+              final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+              final minWidth = 96.0 * scale.clamp(1.0, 2.0);
+              final columns = ((constraints.maxWidth + gap) /
+                      (minWidth + gap))
+                  .floor()
+                  .clamp(1, items.length);
+              final tileWidth =
+                  (constraints.maxWidth - gap * (columns - 1)) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final item in items)
+                    SizedBox(
+                      width: tileWidth,
+                      child: _QuickActionTile(
+                        icon: item.icon,
+                        label: item.label,
+                        route: item.route,
+                        tint: item.tint,
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -158,11 +163,13 @@ class _QuickActionTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(Dimensions.RADIUS_LARGE),
       onTap: () => Get.toNamed(route),
       child: SizedBox(
-        width: 64 * MediaQuery.textScalerOf(context).scale(12) / 12,
+        width: double.infinity,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 48),
               decoration: BoxDecoration(
                 color: Get.isDarkMode
                     ? Colors.grey.withValues(alpha: 0.05)
@@ -184,10 +191,8 @@ class _QuickActionTile extends StatelessWidget {
                     Text(
                       label,
                       textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       style: robotoRegular.copyWith(
-                        fontSize: Dimensions.FONT_SIZE_EXTRA_SMALL,
+                        fontSize: Dimensions.FONT_SIZE_SMALL,
                       ),
                     ),
                   ],

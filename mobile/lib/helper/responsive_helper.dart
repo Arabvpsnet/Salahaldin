@@ -1,45 +1,22 @@
-// ignore_for_file: strict_top_level_inference
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ResponsiveHelper {
-  static bool isMobilePhone() {
-    if (!kIsWeb) {
-      return true;
-    } else {
-      return false;
-    }
+  static const double tabletBreakpoint = 650;
+  static const double desktopBreakpoint = 1300;
+
+  // Legacy platform predicate; use isMobile(context) for layout decisions.
+  static bool isMobilePhone() => !kIsWeb;
+  static bool isWeb() => kIsWeb;
+
+  static bool isMobile(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < tabletBreakpoint;
+
+  static bool isTab(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return width >= tabletBreakpoint && width < desktopBreakpoint;
   }
 
-  static bool isWeb() {
-    return kIsWeb;
-  }
-
-  static bool isMobile(context) {
-    final size = MediaQuery.of(context).size.width;
-    if (size < 650 || !kIsWeb) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static bool isTab(context) {
-    final size = MediaQuery.of(context).size.width;
-    if (size < 1300 && size >= 650) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static bool isDesktop(context) {
-    final size = MediaQuery.of(context).size.width;
-    if (size >= 1300) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= desktopBreakpoint;
 }
