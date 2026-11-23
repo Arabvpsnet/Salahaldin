@@ -101,3 +101,14 @@ button { cursor: pointer; }
   overflow: hidden;
 }
 .stage.portrait { width: 1080px; height: 1920px; }
+
+/* Respect reduced-motion preferences without freezing scheduled content. */
+@media (prefers-reduced-motion: reduce) {
+  #splash img, .kb .bg-layer.on, .clock .colon, .next.soon .next-count {
+    animation: none !important;
+  }
+  .bg-layer, .feature-body, .card, .sp, .sp-main {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

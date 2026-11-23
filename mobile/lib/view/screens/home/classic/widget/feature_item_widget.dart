@@ -21,7 +21,10 @@ class FeatureItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
+      borderRadius: BorderRadius.circular(Dimensions.RADIUS_DEFAULT),
       child: Container(
+        constraints: const BoxConstraints(minHeight: 84),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -34,6 +37,7 @@ class FeatureItemWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(Dimensions.RADIUS_DEFAULT),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // item icon path
@@ -42,6 +46,7 @@ class FeatureItemWidget extends StatelessWidget {
               color: Theme.of(context).primaryColor,
               height: 40,
             ), //  item name
+            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: Dimensions.PADDING_SIZE_EXTRA_GRID_SMALL - 2,

@@ -197,7 +197,7 @@ class ClassicHomeScreen extends StatelessWidget {
     return Obx(
       () => Text(
         "${"todays_Prayer_Time_in".tr} ${controller.saveAddress.value.isNotEmpty ? controller.saveAddress.value : controller.currentAddress.value}",
-        textAlign: TextAlign.left,
+        textAlign: TextAlign.start,
         style: robotoRegular.copyWith(
           fontSize: Dimensions.FONT_SIZE_LARGE,
           fontWeight: FontWeight.bold,
@@ -376,14 +376,26 @@ class ClassicHomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
             horizontal: Dimensions.PADDING_SIZE_GRID_SMALL,
           ),
-          child: GridView.count(
-            shrinkWrap: true,
-            primary: false,
-            crossAxisCount: 4,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            addAutomaticKeepAlives: false,
-            children: _buildFeatureItems(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 10.0;
+              final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+              final items = _buildFeatureItems();
+              final columns = ((constraints.maxWidth + gap) /
+                      (112 * scale.clamp(1.0, 2.0) + gap))
+                  .floor()
+                  .clamp(1, items.length);
+              final width =
+                  (constraints.maxWidth - gap * (columns - 1)) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final item in items)
+                    SizedBox(width: width, child: item),
+                ],
+              );
+            },
           ),
         ),
       ),
