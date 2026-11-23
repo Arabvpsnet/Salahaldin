@@ -28,7 +28,7 @@ jobs:
       run:
         working-directory: tv
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -41,7 +41,7 @@ jobs:
   api-syntax:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: php -l server/routes/api.php
       - run: php -l server/app/Http/Controllers/Quran/PrayerTime/PrayerTimeImportController.php
       - run: python3 -m json.tool shared/contracts/mosque-schedule.schema.json >/dev/null
@@ -56,7 +56,7 @@ jobs:
       run:
         working-directory: mobile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.8'
