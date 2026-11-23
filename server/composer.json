@@ -28,7 +28,7 @@
     "laravel/sail": "^1.53",
     "mockery/mockery": "^1.4.4",
     "nunomaduro/collision": "^8.0",
-    "phpunit/phpunit": "^12.0",
+    "phpunit/phpunit": "^13.4",
     "laravel/pail": "^1.2"
   },
   "autoload": {
