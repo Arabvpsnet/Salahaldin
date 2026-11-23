@@ -137,10 +137,12 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
         if (mounted) setState(() => _audioError = true);
       }));
     } catch (_) {
-      if (mounted) setState(() {
-        _track = null;
-        _audioError = true;
-      });
+      if (mounted) {
+        setState(() {
+          _track = null;
+          _audioError = true;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
