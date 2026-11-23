@@ -8,12 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 
 typedef _Guide = Map<String, dynamic>;
 
-final _guides = rootBundle
-    .loadString('assets/faith/guide.json')
-    .then(
-      (source) => (jsonDecode(source) as Map<String, dynamic>)
-          .cast<String, _Guide>(),
-    );
+enum _Topic {
+  islam(Icons.menu_book_outlined),
+  ramadan(Icons.nightlight_round),
+  ruqyah(Icons.headphones_outlined);
+
+  const _Topic(this.icon);
+  final IconData icon;
+}
 
 const _rtl = {'ar', 'fa', 'ur', 'ckb', 'kmr'};
 const _threeSurahs = [
@@ -28,8 +30,28 @@ String _language(BuildContext context, Map<String, _Guide> guides) {
   return guides.containsKey(code) ? code : 'en';
 }
 
-class FaithGuideEntries extends StatelessWidget {
+class FaithGuideEntries extends StatefulWidget {
   const FaithGuideEntries({super.key});
+
+  @override
+  State<FaithGuideEntries> createState() => _FaithGuideEntriesState();
+}
+
+class _FaithGuideEntriesState extends State<FaithGuideEntries> {
+  AssetBundle? _bundle;
+  late Future<Map<String, _Guide>> _guides;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final bundle = DefaultAssetBundle.of(context);
+    if (identical(_bundle, bundle)) return;
+    _bundle = bundle;
+    _guides = bundle.loadString('assets/faith/guide.json').then(
+      (source) => (jsonDecode(source) as Map<String, dynamic>)
+          .cast<String, _Guide>(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,22 +65,18 @@ class FaithGuideEntries extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Column(
             children: [
-              for (final (key, icon, ruqyah) in [
-                ('islam', Icons.menu_book_outlined, false),
-                ('ruqyah', Icons.headphones_outlined, true),
-              ])
+              for (final topic in _Topic.values)
                 Card(
                   child: ListTile(
-                    leading: Icon(icon),
-                    title: Text(guide[key] as String),
+                    leading: Icon(topic.icon),
+                    title: Text(guide[topic.name] as String),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        settings: RouteSettings(name: '/faith/$key'),
                         builder: (_) => _FaithGuideScreen(
                           guides: guides,
                           language: _language(context, guides),
-                          ruqyah: ruqyah,
+                          topic: topic,
                         ),
                       ),
                     ),
@@ -76,12 +94,12 @@ class _FaithGuideScreen extends StatefulWidget {
   const _FaithGuideScreen({
     required this.guides,
     required this.language,
-    required this.ruqyah,
+    required this.topic,
   });
 
   final Map<String, _Guide> guides;
   final String language;
-  final bool ruqyah;
+  final _Topic topic;
 
   @override
   State<_FaithGuideScreen> createState() => _FaithGuideScreenState();
@@ -126,7 +144,9 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
         await player.pause();
         if (!mounted) return;
         final chapter = surah.toString().padLeft(3, '0');
-        await player.setUrl('https://server8.mp3quran.net/afs/$chapter.mp3');
+        await player.setUrl(
+          'https://cdn.mp3quran.net/audio/mahmoud-husary/r1/$chapter.mp3',
+        );
         if (!mounted) return;
         setState(() => _track = surah);
       } else if (player.processingState == ProcessingState.completed) {
@@ -176,7 +196,7 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
           ? TextDirection.rtl
           : TextDirection.ltr,
       child: Scaffold(
-        appBar: AppBar(title: Text(_text(widget.ruqyah ? 'ruqyah' : 'islam'))),
+        appBar: AppBar(title: Text(_text(widget.topic.name))),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -201,7 +221,7 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
                 },
               ),
             ),
-            if (widget.ruqyah) ...[
+            if (widget.topic == _Topic.ruqyah) ...[
               _section('ruqyah', [
                 Text(_text('practice')),
                 const SizedBox(height: 8),
@@ -213,11 +233,7 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
               ]),
               _section('signs', [Text(_text('care'))]),
               _section('audio', [
-                Text(
-                  _language == 'ar'
-                      ? 'مشاري راشد العفاسي • MP3Quran'
-                      : 'Mishary Rashid Alafasy • MP3Quran',
-                ),
+                Text('${_text('reciter')} • MP3Quran'),
                 for (final (number, arabic, latin) in _recitations)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -238,7 +254,7 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
                   child: TextButton(
                     onPressed: () async {
                       try {
-                        final source = Uri.https('www.mp3quran.net', '/eng/afs');
+                        final source = Uri.https('www.mp3quran.net', '/eng/husr');
                         if (await launchUrl(source)) return;
                       } on PlatformException {
                         // Display the same retry message as the stream.
@@ -248,6 +264,16 @@ class _FaithGuideScreenState extends State<_FaithGuideScreen> {
                     child: const Text('MP3Quran ↗'),
                   ),
                 ),
+              ]),
+            ] else if (widget.topic == _Topic.ramadan) ...[
+              _section('ramadan_about_title', [Text(_text('ramadan_about'))]),
+              _section('ramadan_ruling_title', [Text(_text('ramadan_ruling'))]),
+              _section('ramadan_essentials_title', [
+                Text(_text('ramadan_intention')),
+                const SizedBox(height: 8),
+                Text(_text('ramadan_abstinence')),
+                const SizedBox(height: 12),
+                Text(_text('ramadan_references')),
               ]),
             ] else ...[
               _section('shahada', [
