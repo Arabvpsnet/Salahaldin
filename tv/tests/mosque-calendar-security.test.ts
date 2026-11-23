@@ -38,6 +38,13 @@ describe('canonical mosque calendars', () => {
     settings.reset();
   });
 
+  it('rejects impossible recurring dates while preserving leap day', () => {
+    const times = sample().timetable['2026-11-21'];
+    settings.replace({ timetable: { '02-30': times, '04-31': times, '02-29': times } });
+    expect(Object.keys(settings.get().timetable)).toEqual(['02-29']);
+    settings.reset();
+  });
+
   it('ignores injected keys and rejects invalid entries in backups', () => {
     const raw = JSON.parse('{"timetable":{"__proto__":["a"],"2026-02-30":["03:00","04:00","05:00","06:00","07:00","08:00"]},"dailyIqama":{"2026-11-21":{"constructor":"12:00"}}}');
     settings.replace(raw);

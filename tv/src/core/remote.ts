@@ -95,9 +95,12 @@ function remoteUrl(): string | null {
     url.href.replace(/\/?$/, '/')).href;
 }
 
+let syncing = false;
+
 export async function syncMosqueCalendar(): Promise<void> {
   const url = remoteUrl();
-  if (!url) return;
+  if (!url || syncing) return;
+  syncing = true;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 10000);
   try {
@@ -125,6 +128,7 @@ export async function syncMosqueCalendar(): Promise<void> {
     invalidate();
   } finally {
     clearTimeout(timeout);
+    syncing = false;
   }
 }
 

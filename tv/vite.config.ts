@@ -46,7 +46,7 @@ export default defineConfig({
             options: { cacheName: 'sakina-backgrounds', expiration: { maxEntries: 40 } },
           },
           {
-            urlPattern: ({ url }) => url.hostname === 'api.aladhan.com' || url.hostname.endsWith('open-meteo.com'),
+            urlPattern: ({ url }) => url.hostname === 'api.aladhan.com' || (url.hostname === 'open-meteo.com' || url.hostname.endsWith('.open-meteo.com')),
             handler: 'NetworkFirst',
             options: { cacheName: 'sakina-api', networkTimeoutSeconds: 6, expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 40 } },
           },

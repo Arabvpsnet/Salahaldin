@@ -42,7 +42,7 @@ const dayCache = new Map<string, DayTimes>();
 let cacheSig = '';
 
 function signature(s: Settings) {
-  return JSON.stringify([s.location, s.calc, s.timetable && Object.keys(s.timetable).length]);
+  return JSON.stringify([s.location, s.calc, s.timetable]);
 }
 
 export function invalidate() { dayCache.clear(); }
