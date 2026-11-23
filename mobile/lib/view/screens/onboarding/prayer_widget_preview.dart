@@ -208,7 +208,13 @@ class _IosPreview extends StatelessWidget {
                         size: 15,
                       ),
                       const SizedBox(width: 6),
-                      const Text('صلاح الدين'),
+                      const Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text('صلاح الدين'),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
