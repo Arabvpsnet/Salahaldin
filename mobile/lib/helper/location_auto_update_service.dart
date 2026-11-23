@@ -176,7 +176,7 @@ class LocationAutoUpdateService {
         // cancelling the subscription removes it and releases the wake lock.
         foregroundNotificationConfig: backgroundPermissionGranted
             ? ForegroundNotificationConfig(
-                notificationTitle: 'SalaTime',
+                notificationTitle: 'صلاح الدين',
                 notificationText: 'travel_location_notification'.tr,
                 notificationChannelName: 'travel_location_title'.tr,
                 notificationIcon: const AndroidResource(

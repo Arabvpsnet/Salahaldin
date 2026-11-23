@@ -58,7 +58,7 @@ class LandingSettingSeeder extends Seeder
         $aiChatFeaturesJson = json_encode([
             ['icon' => '⚡', 'title' => 'Sub-second Responses', 'description' => 'Groq LPU technology delivers answers in milliseconds'],
             ['icon' => '📚', 'title' => 'Quran & Hadith Referenced', 'description' => 'Answers include Arabic text and authentic source citations'],
-            ['icon' => '📱', 'title' => 'Full Experience in the App', 'description' => 'Chat history, offline access, and more inside SalaTime'],
+            ['icon' => '📱', 'title' => 'Full Experience in the App', 'description' => 'Chat history, offline access, and more inside صلاح الدين'],
         ]);
 
         $aiChatSuggestionsJson = json_encode([
@@ -78,7 +78,7 @@ class LandingSettingSeeder extends Seeder
 
         $settings = [
             // Hero
-            'app_name'               => 'SalaTime',
+            'app_name'               => 'صلاح الدين',
             'hero_badge_text'        => 'Available on Android',
             'hero_title'             => 'Your Complete Islamic Companion',
             'hero_subtitle'          => 'Faith in Your Hands',
@@ -100,7 +100,7 @@ class LandingSettingSeeder extends Seeder
             'quran_title'            => 'Full Quran Reading Experience',
             'quran_title_highlight'  => 'Quran',
             'quran_description'      => 'Read, listen, and understand the Holy Quran with multi-language translations, phonetic transliteration, and beautiful Arabic typography. Share your favorite ayahs with one tap.',
-            'quran_offline_note'     => 'Full offline experience with background play, bookmarks & 100+ reciters in the SalaTime app.',
+            'quran_offline_note'     => 'Full offline experience with background play, bookmarks & 100+ reciters in the صلاح الدين app.',
 
             // Prayer section
             'prayer_title'           => 'Never Miss A Prayer',
@@ -148,7 +148,7 @@ class LandingSettingSeeder extends Seeder
             // Download section
             'download_title'           => 'Start Your Islamic Journey Today',
             'download_title_highlight' => 'Today',
-            'download_description'     => 'Join hundreds of thousands of Muslims worldwide who use SalaTime for their daily Islamic needs. Download for free today.',
+            'download_description'     => 'Join hundreds of thousands of Muslims worldwide who use صلاح الدين for their daily Islamic needs. Download for free today.',
             'codecanyon_url'           => 'https://github.com/HydraaLabs/salatime',
             'codecanyon_prompt_text'   => 'Want to resell or customize?',
             'codecanyon_link_text'     => 'Get the source code on CodeCanyon →',

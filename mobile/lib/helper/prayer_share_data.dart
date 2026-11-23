@@ -89,7 +89,7 @@ class PrayerShareData {
     required String Function(DateTime) formatDate,
     required String hijriDate,
   }) => [
-    'SalaTime · ${translate('prayer_share_title')}',
+    'صلاح الدين · ${translate('prayer_share_title')}',
     if (city.isNotEmpty) city,
     formatDate(date),
     hijriDate,

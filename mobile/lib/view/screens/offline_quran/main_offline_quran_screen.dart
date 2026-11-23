@@ -15,7 +15,13 @@ import 'package:salatime/view/screens/quran/widget/bookmark_tab.dart';
 
 class MainOfflineQuranScreen extends StatefulWidget {
   final bool appBackButton;
-  const MainOfflineQuranScreen({super.key, required this.appBackButton});
+  const MainOfflineQuranScreen({
+    super.key,
+    required this.appBackButton,
+    this.openOnSurahs = false,
+  });
+
+  final bool openOnSurahs;
 
   @override
   State<MainOfflineQuranScreen> createState() => _MainOfflineQuranScreenState();
@@ -28,7 +34,11 @@ class _MainOfflineQuranScreenState extends State<MainOfflineQuranScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: 2);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.openOnSurahs ? 0 : 2,
+    );
   }
 
   @override

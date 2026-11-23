@@ -101,7 +101,7 @@ open class PrayerWidgetProvider : AppWidgetProvider() {
             val displayed = if (elapsed) recent else next
             val views = RemoteViews(context.packageName, if (expanded) R.layout.prayer_widget_expanded else R.layout.prayer_widget)
             val city = prefs.getString("city", "") ?: ""
-            val prayer = displayed?.optString("name") ?: "SalaTime"
+            val prayer = displayed?.optString("name") ?: "صلاح الدين"
             val sinceTemplate = prefs.getString("sinceLabel", context.getString(R.string.prayer_widget_since_label))!!
             val title = if (elapsed) sinceTemplate.replace("@prayer", prayer)
                 else prefs.getString("nextLabel", context.getString(R.string.prayer_widget_next_label))

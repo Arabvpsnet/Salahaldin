@@ -90,7 +90,7 @@ void main() {
           expect(arguments['timeInterval'], 60000);
           final notification = arguments['foregroundNotificationConfig'];
           if (granted) {
-            expect(notification['notificationTitle'], 'SalaTime');
+            expect(notification['notificationTitle'], 'صلاح الدين');
             expect(notification['notificationIcon'], {
               'name': 'launcher_icon',
               'defType': 'mipmap',

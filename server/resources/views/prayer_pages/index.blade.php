@@ -5,7 +5,7 @@
     $intro = $country ? __('prayer_pages.country_intro', ['country' => $countryName]) : __('prayer_pages.world_intro');
     $items = $country ? $cities : $countries->values()->all();
 @endphp
-@section('title', $heading.' | SalaTime')
+@section('title', $heading.' | صلاح الدين')
 @section('description', $description)
 @push('structured-data')
 @php

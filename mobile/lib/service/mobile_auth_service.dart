@@ -435,7 +435,7 @@ class MobileAuthService {
         body: {
           'email': email.trim(),
           'password': password,
-          'device_name': 'SalaTime ${defaultTargetPlatform.name}',
+          'device_name': 'صلاح الدين ${defaultTargetPlatform.name}',
         },
       ),
       expectedGeneration: generation,
@@ -465,7 +465,7 @@ class MobileAuthService {
           'email': email.trim(),
           'password': password,
           'password_confirmation': password,
-          'device_name': 'SalaTime ${defaultTargetPlatform.name}',
+          'device_name': 'صلاح الدين ${defaultTargetPlatform.name}',
         },
       ),
       expectedGeneration: generation,
@@ -492,7 +492,7 @@ class MobileAuthService {
         authorizationToken: link ? token : null,
         body: {
           ...identity,
-          'device_name': 'SalaTime ${defaultTargetPlatform.name}',
+          'device_name': 'صلاح الدين ${defaultTargetPlatform.name}',
         },
       ),
       expectedGeneration: generation,
@@ -524,7 +524,7 @@ class MobileAuthService {
         authorizationToken: link ? token : null,
         body: {
           ...identity,
-          'device_name': 'SalaTime ${defaultTargetPlatform.name}',
+          'device_name': 'صلاح الدين ${defaultTargetPlatform.name}',
         },
       ),
       expectedGeneration: generation,

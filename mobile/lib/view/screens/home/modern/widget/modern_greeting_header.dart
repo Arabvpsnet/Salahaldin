@@ -81,7 +81,7 @@ class ModernGreetingHeader extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            (mosqueData?.mosqueName ?? 'SalaTime').toString(),
+                            (mosqueData?.mosqueName ?? 'صلاح الدين').toString(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: robotoBold.copyWith(

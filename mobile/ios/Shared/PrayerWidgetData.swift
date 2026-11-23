@@ -181,7 +181,7 @@ enum PrayerWidgetStore {
             prayers: prayers.sorted { $0.at < $1.at }, city: payload["city"] as? String ?? "",
             nextLabel: payload["nextLabel"] as? String ?? "Next prayer",
             sinceLabel: payload["sinceLabel"] as? String ?? "Time since @prayer",
-            emptyLabel: payload["emptyLabel"] as? String ?? "Open SalaTime to refresh",
+            emptyLabel: payload["emptyLabel"] as? String ?? "Open صلاح الدين to refresh",
             locale: payload["locale"] as? String ?? "en", timeZone: payload["timeZone"] as? String ?? "UTC",
             use24HourFormat: payload["use24HourFormat"] as? Bool ?? true,
             countdownPrefix: payload["countdownPrefix"] as? String

@@ -3,11 +3,11 @@ import 'package:salatime/data/model/response/language_model.dart';
 import 'package:salatime/util/images.dart';
 
 class AppConstants {
-  static const String APP_NAME = 'SalaTime';
+  static const String APP_NAME = 'صلاح الدين';
   static const String APP_VERSION = "7.0";
 
   // main base url
-  // Override when building against a self-hosted SalaTime backend.
+  // Override when building against a self-hosted صلاح الدين backend.
   static const String BASE_URL = String.fromEnvironment(
     'SALATIME_API_URL',
     defaultValue: 'https://salatime.net',

@@ -3,7 +3,7 @@
 
 return [
     'app' => [
-        ['name' => 'company_name', 'value' => 'SalaTime', 'context' => 'app'],
+        ['name' => 'company_name', 'value' => 'صلاح الدين', 'context' => 'app'],
         ['name' => 'address', 'value' => 'Masjid al-Haram', 'context' => 'app'],
         ['name' => 'web_logo', 'value' => 'assets/img/logo.png', 'context' => 'app'],
         ['name' => 'web_icon', 'value' => 'assets/img/thumbnail.png', 'context' => 'app'],

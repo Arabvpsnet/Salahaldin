@@ -175,11 +175,11 @@ class ViewController extends Controller
         }
 
         $defaults = [
-            'app_name' => 'SalaTime',
+            'app_name' => 'صلاح الدين',
             'hero_badge_text' => 'Available on Android',
             'hero_title' => 'Your Complete',
             'hero_subtitle' => 'Islamic Companion',
-            'hero_description' => 'SalaTime brings you the full Quran, prayer times, hadith, dua, Qibla, Zakat calculator, AI Islamic chat, and 40+ languages — everything you need for your daily Islamic life in one beautiful app.',
+            'hero_description' => 'صلاح الدين brings you the full Quran, prayer times, hadith, dua, Qibla, Zakat calculator, AI Islamic chat, and 40+ languages — everything you need for your daily Islamic life in one beautiful app.',
             'rating' => '4.9',
             'downloads_count' => '100K+',
             'languages_count' => '40+',
@@ -192,7 +192,7 @@ class ViewController extends Controller
             'quran_title' => 'Full Quran Reading',
             'quran_title_highlight' => 'Experience',
             'quran_description' => 'Read, listen, and understand the Holy Quran with multi-language translations, phonetic transliteration, and beautiful Arabic typography. Share your favorite ayahs with one tap.',
-            'quran_offline_note' => 'Full offline experience with background play, bookmarks & 100+ reciters in the SalaTime app.',
+            'quran_offline_note' => 'Full offline experience with background play, bookmarks & 100+ reciters in the صلاح الدين app.',
             'prayer_title' => 'Never Miss',
             'prayer_title_highlight' => 'A Prayer',
             'prayer_description' => 'Get accurate prayer times for your location with beautiful Adhan notifications. Find the Qibla direction with an improved compass, and stay on top of Ramadan Sehri & Iftar schedules.',
@@ -220,7 +220,7 @@ class ViewController extends Controller
             'tech_subtitle' => 'Modern, fast, and cross-platform',
             'download_title' => 'Start Your Islamic',
             'download_title_highlight' => 'Journey Today',
-            'download_description' => 'Join hundreds of thousands of Muslims worldwide who use SalaTime for their daily Islamic needs. Download for free today.',
+            'download_description' => 'Join hundreds of thousands of Muslims worldwide who use صلاح الدين for their daily Islamic needs. Download for free today.',
             'codecanyon_prompt_text' => 'Want to resell or customize?',
             'codecanyon_link_text' => 'Get the source code on CodeCanyon →',
             'show_codecanyon_link' => '1',
@@ -309,7 +309,7 @@ class ViewController extends Controller
         $s['ai_chat_features'] = $decodeList($landing['ai_chat_features_json'] ?? null, [
             ['icon' => '⚡', 'title' => 'Sub-second Responses', 'description' => 'Groq LPU technology delivers answers in milliseconds'],
             ['icon' => '📚', 'title' => 'Quran & Hadith Referenced', 'description' => 'Answers include Arabic text and authentic source citations'],
-            ['icon' => '📱', 'title' => 'Full Experience in the App', 'description' => 'Chat history, offline access, and more inside SalaTime'],
+            ['icon' => '📱', 'title' => 'Full Experience in the App', 'description' => 'Chat history, offline access, and more inside صلاح الدين'],
         ]);
 
         $s['ai_chat_suggestions'] = $decodeList($landing['ai_chat_suggestions_json'] ?? null, [

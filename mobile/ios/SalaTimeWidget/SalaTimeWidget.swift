@@ -13,8 +13,8 @@ struct SalaTimeProvider: TimelineProvider {
         let snapshot = PrayerWidgetSnapshot(
             prayers: [PrayerWidgetPrayer(at: now.addingTimeInterval(3600).timeIntervalSince1970 * 1000,
                                          prayerId: 3, date: "", name: "Asr", shortName: "Asr")],
-            city: "SalaTime", nextLabel: "Next prayer", sinceLabel: "Time since @prayer",
-            emptyLabel: "Open SalaTime", locale: "en", timeZone: TimeZone.current.identifier,
+            city: "صلاح الدين", nextLabel: "Next prayer", sinceLabel: "Time since @prayer",
+            emptyLabel: "Open صلاح الدين", locale: "en", timeZone: TimeZone.current.identifier,
             use24HourFormat: true
         )
         return SalaTimeEntry(date: now, snapshot: snapshot, options: PrayerWidgetOptions())
@@ -55,7 +55,7 @@ struct SalaTimeWidgetView: View {
         VStack(alignment: .leading, spacing: medium ? 4 : (small ? 6 : 10)) {
             HStack(spacing: 6) {
                 if entry.options.illustration { Image(systemName: "moon.stars.fill").foregroundColor(Color(red: 0.67, green: 0.51, blue: 0.22)) }
-                Text("SalaTime").font(.caption.weight(.semibold))
+                Text("صلاح الدين").font(.caption.weight(.semibold))
                 Spacer(minLength: 0)
                 if entry.options.city && !small, let city = snapshot?.city { Text(city).font(.caption).lineLimit(1) }
             }
@@ -185,7 +185,7 @@ struct SalaTimeWidget: Widget {
     let kind = PrayerWidgetStore.kind
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SalaTimeProvider()) { entry in SalaTimeWidgetView(entry: entry) }
-            .configurationDisplayName("SalaTime")
+            .configurationDisplayName("صلاح الدين")
             .description(NSLocalizedString("widget_description", comment: "Prayer widget description"))
             .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

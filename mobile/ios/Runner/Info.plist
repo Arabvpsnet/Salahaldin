@@ -20,7 +20,7 @@
 		<string>ur</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>SalaTime</string>
+	<string>صلاح الدين</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,7 +28,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>SalaTime</string>
+	<string>صلاح الدين</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -60,9 +60,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>If you enable automatic location updates, SalaTime uses your location to update prayer times and reminders as you travel, including while the app is in the background.</string>
+	<string>If you enable automatic location updates, صلاح الدين uses your location to update prayer times and reminders as you travel, including while the app is in the background.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>SalaTime uses your location to calculate local prayer times, show the Qibla direction and find nearby mosques. You can also choose a city manually without granting location access.</string>
+	<string>صلاح الدين uses your location to calculate local prayer times, show the Qibla direction and find nearby mosques. You can also choose a city manually without granting location access.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app requires access to your photo library to upload, share, or save wallpapers.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -93,7 +93,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSMotionUsageDescription</key>
-	<string>SalaTime uses compass and motion sensors to show the Qibla direction.</string>
+	<string>صلاح الدين uses compass and motion sensors to show the Qibla direction.</string>
 	<key>SalaTimeAppGroup</key>
 	<string>$(SALATIME_APP_GROUP)</string>
 	<key>CFBundleURLTypes</key>

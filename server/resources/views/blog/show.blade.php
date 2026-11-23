@@ -18,18 +18,18 @@
             'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $articleUrl],
             'publisher' => [
                 '@type' => 'Organization',
-                'name' => 'SalaTime',
+                'name' => 'صلاح الدين',
                 'logo' => ['@type' => 'ImageObject', 'url' => asset($s['web_logo'] ?? 'assets/img/logo.png')],
             ],
         ];
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $articleTitle }} – {{ $s['app_name'] ?? 'SalaTime' }}</title>
+    <title>{{ $articleTitle }} – {{ $s['app_name'] ?? 'صلاح الدين' }}</title>
     <meta name="description" content="{{ $articleDescription }}">
     <meta name="robots" content="index,follow,max-image-preview:large">
     <meta property="og:type" content="article">
-    <meta property="og:site_name" content="SalaTime">
+    <meta property="og:site_name" content="صلاح الدين">
     <meta property="og:title" content="{{ $articleTitle }}">
     <meta property="og:description" content="{{ $articleDescription }}">
     <meta property="og:image" content="{{ $articleImage }}">
@@ -120,9 +120,9 @@
 <header class="topbar">
     <a href="{{ url('/') }}" class="topbar-brand">
         @if(!empty($s['web_logo']))
-            <img src="{{ asset($s['web_logo']) }}?v=20260827" alt="{{ $s['app_name'] ?? 'SalaTime' }}" class="topbar-logo">
+            <img src="{{ asset($s['web_logo']) }}?v=20260827" alt="{{ $s['app_name'] ?? 'صلاح الدين' }}" class="topbar-logo">
         @else
-            <span class="topbar-name">{{ $s['app_name'] ?? 'SalaTime' }}</span>
+            <span class="topbar-name">{{ $s['app_name'] ?? 'صلاح الدين' }}</span>
         @endif
     </a>
     <div class="topbar-links">
@@ -179,7 +179,7 @@
 </div>
 
 <footer class="page-footer">
-    <p>© {{ date('Y') }} {{ $s['app_name'] ?? 'SalaTime' }}. All rights reserved.</p>
+    <p>© {{ date('Y') }} {{ $s['app_name'] ?? 'صلاح الدين' }}. All rights reserved.</p>
     <p style="margin-top:8px;">
         <a href="{{ url('/') }}">Home</a>
         <a href="{{ route('blog.index') }}">Blog</a>
