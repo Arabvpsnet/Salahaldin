@@ -94,7 +94,7 @@
 .clock .ampm { font-size: 40px; font-weight: 500; color: var(--ink-3); margin: 34px 0 0 14px; }
 .no-sec .clock .sec { display: none; }
 
-.next { margin-top: 30px; max-width: 900px; width: 100%; }
+.next-prayer { margin-top: 30px; max-width: 900px; width: 100%; }
 .next-label { display: flex; align-items: center; gap: 16px; font-size: 22px; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: var(--ink-3); }
 .portrait .next-label { justify-content: center; }
 .next-label .ar { letter-spacing: 0; font-size: 34px; color: var(--gold); text-transform: none; font-weight: 500; }
@@ -106,7 +106,7 @@
 .next-bar { position: relative; height: 4px; margin-top: 26px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
 .next-bar i { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0); background: linear-gradient(90deg, var(--gold-2), var(--gold)); border-radius: 4px; transition: transform 1s linear; }
 [dir='rtl'] .next-bar i { transform-origin: right center; }
-.next.soon .next-count { animation: pulse 1.6s ease-in-out infinite; }
+.next-prayer.soon .next-count { animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.55; } }
 
 .chips { display: flex; gap: 16px; margin-top: 28px; flex-wrap: wrap; }

@@ -96,7 +96,7 @@ export class Display {
 
     const hero = h('section', { class: 'hero' },
       h('div', { class: 'clock num' }, h('span', { class: 'hm' }, mk('hh', 'span', ''), h('span', { class: 'colon' }, ':'), mk('mm', 'span', '')), mk('sec', 'span', 'sec'), mk('ampm', 'span', 'ampm')),
-      mk('next', 'div', 'next',
+      mk('next', 'div', 'next-prayer',
         h('div', { class: 'next-label' }, mk('nextLabel', 'span', ''), mk('nextAr', 'span', 'ar')),
         h('div', { class: 'next-row' }, mk('nextName', 'span', 'next-name'), mk('nextIn', 'span', 'next-in'), mk('nextCount', 'span', 'next-count num')),
         h('div', { class: 'next-bar' }, mk('nextBar', 'i', ''))),
@@ -365,7 +365,7 @@ export class Display {
     // Next prayer
     const n = st.next;
     const remain = (n.at.getTime() - now.getTime()) / 1000;
-    setText(this.r.nextAr, PRAYER_AR[n.key]);
+    setText(this.r.nextAr, L === 'ar' ? '' : PRAYER_AR[n.key]);
     setText(this.r.nextName, L === 'ar' ? PRAYER_AR[n.key] : prayerName(n.key, L));
     toggleClass(this.r.nextName, 'ar', L === 'ar');
     setText(this.r.nextCount, D(formatCountdown(remain, true)));
