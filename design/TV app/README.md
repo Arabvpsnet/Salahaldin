@@ -34,3 +34,16 @@
 
 ## Content safeguards
 The mockup uses sample times strictly for design review, not live prayer times. Treat ayat/adhkar and translation content as separate source-attributed assets and preserve the licensing notices in the codebase. There are no live server credentials in the prototype.
+
+## Proposed branch setup
+
+The TV currently reads the public schedule for the mosque selected at build time. Its mosque identity and logo are configured locally. The next release can give each mosque a profile in one admin dashboard and share its published schedule between phones and TVs.
+
+| Screen | Workflow |
+|---|---|
+| Admin | Set the mosque's name, logo, address, city and time zone. Preview and publish the official calendar, daily iqamah times and Friday sessions. Restrict editing to authorized accounts and retain a history of published revisions. |
+| TV | Pair the display with a mosque using a short-lived code. Show the mosque identity, upcoming prayer and iqamah with large type and a visible remote-control focus indicator. Cache the published schedule and flag dates the cache does not cover. |
+| Phone | Let the visitor choose a city and mosque or open the mosque's share link. Use the same published calendar revision as TV for the selected mosque. |
+| Quran reader | Show the Arabic mushaf, Latin-script transliteration, translation of meanings and sourced tafsir as selectable views. Use the same Arabic recitation for a given surah and ayah in each view. Offer per-language spoken translations as separate tracks when recordings and rights are available. |
+
+Pilot with two mosques in different cities. Verify that publishing a revision changes only the selected mosque, that phone and TV agree through daylight-saving changes and that the display remains usable offline.

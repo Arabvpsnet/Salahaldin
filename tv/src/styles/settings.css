@@ -13,8 +13,7 @@
   user-select: text;
 }
 .sp.open { opacity: 1; visibility: visible; transform: none; transition: opacity 0.45s var(--ease), transform 0.45s var(--ease), visibility 0s; }
-.sp :focus { outline: none; }
-.sp :focus-visible, .sp button:focus, .sp select:focus, .sp input:focus, .sp textarea:focus {
+.sp :focus {
   outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--gold), 0 0 24px 2px rgba(232, 199, 125, 0.35);
 }
 
